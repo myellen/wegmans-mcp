@@ -134,10 +134,33 @@ If you stop using it: `rm auth.json` and `claude mcp remove wegmans`.
 
 **Token-mint timeout** — your session expired. `rm auth.json` and re-run `setup_login.py`.
 
+## Bundled Claude Skill
+
+Inside `.claude/skills/wegmans/` is an [Agent
+Skill](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
+that auto-loads when a user mentions Wegmans / Meals2Go in a Claude
+session. It carries the non-obvious knowledge we've discovered — the
+menu's nested kit structure, the topping Light/Regular/Extra
+attribute, the "all free toppings + spiciest else" idiom, and
+onboarding instructions for new users.
+
+Claude Code working in this repo picks the skill up automatically. To
+make it available to every project on your machine, copy or symlink it:
+
+```bash
+# user-level install
+cp -r .claude/skills/wegmans ~/.claude/skills/
+```
+
+The skill *complements* the MCP server — it doesn't replace it. The
+MCP server still does the actual API work; the skill helps Claude use
+it well.
+
 ## Project layout
 
 - `src/wegmans_mcp/` — the package (auth, client, server)
 - `scripts/setup_login.py` — one-time interactive login
+- `.claude/skills/wegmans/` — the bundled Claude Agent Skill
 - `docs/api-discovery.md` — reverse-engineered API notes
 - `docs/captures/` — raw HTTP request/response samples for reference
 - `CLAUDE.md` — conventions for AI-assisted development of this codebase
