@@ -6,11 +6,17 @@ import os
 from pathlib import Path
 from typing import Annotated, Any
 
+from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
 from .auth import WegmansAuth
 from .client import WegmansClient
+
+# Load .env from the current working directory if present. setup_login.py
+# writes the auto-discovered loyalty number there so the user doesn't have
+# to set WEGMANS_LOYALTY_ID by hand.
+load_dotenv()
 
 mcp = FastMCP("wegmans-mcp")
 

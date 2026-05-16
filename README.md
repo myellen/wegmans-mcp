@@ -32,9 +32,12 @@ uv run playwright install chromium   # downloads the browser
 uv run python scripts/setup_login.py # a real browser window opens — sign in to Wegmans
 ```
 
-The setup script opens a real Chromium window. Click **Sign In** (top right on meals2go.com) and complete login. Once you're back at the home page logged in, the script saves your session to `auth.json` and closes itself.
+The setup script opens a real Chromium window. Click **Sign In** (top right on meals2go.com) and complete login. Once you're back at the home page logged in, the script:
 
-`auth.json` is sensitive — treat it like a password. It's in `.gitignore`; never share it or commit it.
+- Saves your session to `auth.json`.
+- **Auto-detects your Shoppers Club loyalty number** by sniffing the digital-coupons request the home page fires, and writes it to a `.env` file. The MCP server loads it on startup — you don't need to look up your loyalty number to use `list_coupons` / `clip_coupons`.
+
+Both files are gitignored. Treat them like passwords — `auth.json` is the equivalent of being logged in on a browser.
 
 ## Wiring it into Claude Code
 
@@ -70,7 +73,7 @@ Restart Claude Desktop.
 |---|---|---|
 | `WEGMANS_AUTH_FILE` | `auth.json` (in the working dir) | Path to the saved login state |
 | `WEGMANS_STORE_ID` | `91` (Amherst St., Buffalo NY) | Default Meals2Go store number — you can override anytime via `set_fulfillment` |
-| `WEGMANS_LOYALTY_ID` | (unset) | Your Shoppers Club number. Required for `list_coupons` / `clip_coupons` only. Find it on your Wegmans card or in account settings. |
+| `WEGMANS_LOYALTY_ID` | auto-detected by `setup_login.py` and saved to `.env` | Your Shoppers Club number. Set this manually only if auto-detection fails or you want to override. |
 
 To pass env vars when adding to Claude Code:
 

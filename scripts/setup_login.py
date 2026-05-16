@@ -1,8 +1,12 @@
 """One-time interactive Wegmans Meals2Go login.
 
-Opens a real browser window. Log in normally. The script waits until it
-sees a successful authenticated API call on wegapi.azure-api.net, then
-saves the browser context (cookies + localStorage) to auth.json.
+Opens a real browser window. Log in normally. The script:
+  1. Waits until an Azure B2C token appears on wegapi.azure-api.net
+     (i.e. you've successfully signed in).
+  2. Watches for the digital-coupons URL `/loyalty/<id>` to extract your
+     Shoppers Club number (fires automatically on home-page load).
+  3. Saves the browser session to auth.json and your loyalty number to
+     a local .env file.
 
 Run: `uv run python scripts/setup_login.py`
 """
@@ -12,15 +16,18 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import re
 import sys
 from pathlib import Path
 
 from playwright.async_api import async_playwright
 
 AUTH_FILE = Path("auth.json")
+ENV_FILE = Path(".env")
 LOGIN_URL = "https://www.meals2go.com/"
 API_HOST_SUBSTRING = "wegapi.azure-api.net"
 B2C_ISSUER_SUBSTRING = "myaccount.wegmans.com"
+LOYALTY_URL_RE = re.compile(r"/loyalty/(\d+)")
 
 
 def _is_b2c_token(jwt: str) -> bool:
@@ -32,39 +39,77 @@ def _is_b2c_token(jwt: str) -> bool:
         return False
 
 
+def _write_env_var(path: Path, key: str, value: str) -> None:
+    """Upsert KEY=VALUE in a simple .env file."""
+    lines = path.read_text().splitlines() if path.exists() else []
+    out, replaced = [], False
+    for line in lines:
+        if line.startswith(f"{key}="):
+            out.append(f"{key}={value}")
+            replaced = True
+        else:
+            out.append(line)
+    if not replaced:
+        out.append(f"{key}={value}")
+    path.write_text("\n".join(out) + "\n")
+
+
 async def main() -> int:
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=False)
         context = await browser.new_context()
         page = await context.new_page()
 
-        ready = asyncio.Event()
+        token_ready = asyncio.Event()
+        loyalty_id: dict[str, str] = {}
 
         def on_request(req):
-            if ready.is_set() or API_HOST_SUBSTRING not in req.url:
+            if API_HOST_SUBSTRING not in req.url:
                 return
-            auth = req.headers.get("authorization")
-            if auth and auth.lower().startswith("bearer "):
-                jwt = auth.split(" ", 1)[1]
-                if _is_b2c_token(jwt):
-                    ready.set()
+            if not token_ready.is_set():
+                auth = req.headers.get("authorization")
+                if auth and auth.lower().startswith("bearer "):
+                    if _is_b2c_token(auth.split(" ", 1)[1]):
+                        token_ready.set()
+            if "loyalty_id" not in loyalty_id:
+                m = LOYALTY_URL_RE.search(req.url)
+                if m:
+                    loyalty_id["loyalty_id"] = m.group(1)
 
         page.on("request", on_request)
         await page.goto(LOGIN_URL)
 
         print("Browser opened. Click 'Sign In' and log in to your Wegmans account.")
-        print("(Waiting for an Azure B2C token to appear on wegapi.azure-api.net ...)")
+        print("(Waiting for an Azure B2C token ...)")
 
         try:
-            await asyncio.wait_for(ready.wait(), timeout=600)
+            await asyncio.wait_for(token_ready.wait(), timeout=600)
         except asyncio.TimeoutError:
             print("Timed out after 10 minutes. Closing.", file=sys.stderr)
             await browser.close()
             return 1
 
+        # Give the home page ~15s to fire the digital-coupons request that
+        # carries the loyalty number. If it doesn't fire, we still save auth.
+        for _ in range(30):
+            if "loyalty_id" in loyalty_id:
+                break
+            await asyncio.sleep(0.5)
+
         state = await context.storage_state()
         AUTH_FILE.write_text(json.dumps(state, indent=2))
         print(f"Auth saved to {AUTH_FILE}.")
+
+        if "loyalty_id" in loyalty_id:
+            _write_env_var(ENV_FILE, "WEGMANS_LOYALTY_ID", loyalty_id["loyalty_id"])
+            print(f"Loyalty number saved to {ENV_FILE}.")
+        else:
+            print(
+                "Couldn't detect your loyalty number automatically. "
+                "Set WEGMANS_LOYALTY_ID manually if you want to use coupon tools.",
+                file=sys.stderr,
+            )
+
         await browser.close()
         return 0
 
