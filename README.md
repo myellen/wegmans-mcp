@@ -69,7 +69,7 @@ Restart Claude Desktop.
 | Env var | Default | Purpose |
 |---|---|---|
 | `WEGMANS_AUTH_FILE` | `auth.json` (in the working dir) | Path to the saved login state |
-| `WEGMANS_STORE_ID` | `16` (Fairfax, VA) | Default Meals2Go store number — you can override anytime via `set_fulfillment` |
+| `WEGMANS_STORE_ID` | `91` (Amherst St., Buffalo NY) | Default Meals2Go store number — you can override anytime via `set_fulfillment` |
 | `WEGMANS_LOYALTY_ID` | (unset) | Your Shoppers Club number. Required for `list_coupons` / `clip_coupons` only. Find it on your Wegmans card or in account settings. |
 
 To pass env vars when adding to Claude Code:
