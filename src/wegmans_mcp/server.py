@@ -463,51 +463,102 @@ async def update_cart_item_quantity(
     return _summarize_cart(updated)
 
 
+_COUPON_SOURCES = ("shop", "meals2go")
+
+
+def _normalize_shop_coupon(c: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "offer_id": c.get("id"),
+        "title": c.get("description") or c.get("shortDescription"),
+        "brand": c.get("brand"),
+        "category": c.get("category"),
+        "value": c.get("valueText") or c.get("value"),
+        "terms": c.get("terms"),
+        "min_purchase": c.get("minPurchase"),
+        "clipped": (c.get("group") == "clipped") or bool(c.get("clippedDates")),
+        "expires": c.get("expirationDate"),
+        "clip_ends": c.get("clipEndDate"),
+    }
+
+
+def _normalize_meals2go_coupon(c: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "offer_id": c.get("id"),
+        "title": c.get("copyHeader"),
+        "description": c.get("copyText"),
+        "terms": c.get("terms"),
+        "clipped": bool(c.get("clipped")),
+        "expires": c.get("expirationDate"),
+        "clip_ends": c.get("clipEndDate"),
+        "badge": c.get("badge"),
+    }
+
+
 @mcp.tool()
 async def list_coupons(
+    source: Annotated[
+        str,
+        Field(description="Which coupon set: 'shop' (the main wegmans.com Shoppers Club set, 100+ coupons used at grocery checkout — default) or 'meals2go' (the smaller set tied to Meals2Go orders)."),
+    ] = "shop",
     only_unclipped: Annotated[bool, Field(description="If true, only return coupons not yet clipped.")] = False,
 ) -> list[dict[str, Any]]:
-    """List digital coupons (Shoppers Club offers) for the configured loyalty number."""
+    """List Wegmans digital coupons (Shoppers Club offers)."""
+    if source not in _COUPON_SOURCES:
+        raise ValueError(f"source must be one of {_COUPON_SOURCES}")
     client = _get_client()
-    raw = await client.list_coupons(_loyalty_id())
-    out = []
-    for c in raw:
-        if only_unclipped and c.get("clipped"):
-            continue
-        out.append({
-            "offer_id": c.get("id"),
-            "title": c.get("copyHeader"),
-            "description": c.get("copyText"),
-            "terms": c.get("terms"),
-            "clipped": bool(c.get("clipped")),
-            "expires": c.get("expirationDate"),
-            "clip_ends": c.get("clipEndDate"),
-            "badge": c.get("badge"),
-        })
+    if source == "shop":
+        raw = await client.list_shop_coupons()
+        out = [_normalize_shop_coupon(c) for c in raw]
+    else:
+        raw = await client.list_meals2go_coupons(_loyalty_id())
+        out = [_normalize_meals2go_coupon(c) for c in raw]
+    if only_unclipped:
+        out = [c for c in out if not c["clipped"]]
     return out
 
 
 @mcp.tool()
 async def clip_coupons(
+    source: Annotated[
+        str,
+        Field(description="Which coupon set: 'shop' (default) or 'meals2go'."),
+    ] = "shop",
     offer_ids: Annotated[
         list[int] | None,
-        Field(description="Specific offer_ids to clip. Omit to clip ALL currently unclipped coupons."),
+        Field(description="Specific offer_ids to clip. Omit to clip ALL currently unclipped coupons in the chosen source."),
     ] = None,
 ) -> dict[str, Any]:
-    """Clip digital coupons. Pass offer_ids to clip specific ones, or omit to clip all unclipped."""
+    """Clip digital coupons. Pass offer_ids to clip specific ones, or omit to clip all unclipped.
+
+    Defaults to the shop (wegmans.com) coupon set — the big one most users mean
+    when they say "clip my coupons". Pass source="meals2go" for the smaller
+    Meals2Go-scoped set.
+    """
+    if source not in _COUPON_SOURCES:
+        raise ValueError(f"source must be one of {_COUPON_SOURCES}")
     client = _get_client()
-    loyalty = _loyalty_id()
+    if source == "shop":
+        list_fn = client.list_shop_coupons
+        clip_fn = client.clip_shop_coupons
+        is_clipped = lambda c: c.get("group") == "clipped" or bool(c.get("clippedDates"))
+    else:
+        loyalty = _loyalty_id()
+        list_fn = lambda: client.list_meals2go_coupons(loyalty)
+        clip_fn = lambda ids: client.clip_meals2go_coupons(loyalty, ids)
+        is_clipped = lambda c: bool(c.get("clipped"))
+
     if offer_ids is None:
-        all_c = await client.list_coupons(loyalty)
-        offer_ids = [int(c["id"]) for c in all_c if not c.get("clipped")]
+        offers = await list_fn()
+        offer_ids = [int(c["id"]) for c in offers if not is_clipped(c)]
     if not offer_ids:
-        return {"clipped_now": [], "total_clipped": 0, "message": "Nothing to clip."}
-    await client.clip_coupons(loyalty, offer_ids)
-    after = await client.list_coupons(loyalty)
+        return {"source": source, "clipped_now": [], "total_clipped": 0, "message": "Nothing to clip."}
+    await clip_fn(offer_ids)
+    after = await list_fn()
     return {
+        "source": source,
         "clipped_now": offer_ids,
-        "total_clipped": sum(1 for c in after if c.get("clipped")),
-        "total_unclipped": sum(1 for c in after if not c.get("clipped")),
+        "total_clipped": sum(1 for c in after if is_clipped(c)),
+        "total_unclipped": sum(1 for c in after if not is_clipped(c)),
     }
 
 

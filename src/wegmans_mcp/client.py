@@ -15,10 +15,12 @@ import httpx
 from .auth import WegmansAuth
 
 WEGAPI_BASE = "https://wegapi.azure-api.net"
+WEGMANS_CLOUD_BASE = "https://api.digitaldevelopment.wegmans.cloud"
 APIM_SUBSCRIPTION_KEY = "5197901a4fb04988a35800505266ef1c"
 CART_API_VERSION = "2020-10-07"
 KITTING_API_VERSION = "2021-02-01"
 LOCATION_API_VERSION = "2020-09-09"
+SHOP_COUPONS_API_VERSION = "2024-11-05-preview"
 
 DEFAULT_STORE_ID = 91  # Amherst St., Buffalo NY
 DEFAULT_STOREFRONT_ID = 1
@@ -187,9 +189,9 @@ class WegmansClient:
 
     # ---- Locations -------------------------------------------------------
 
-    # ---- Digital coupons --------------------------------------------------
+    # ---- Digital coupons (Meals2Go side, ~10 coupons, loyalty-scoped) ----
 
-    async def list_coupons(self, loyalty_id: str) -> list[dict[str, Any]]:
+    async def list_meals2go_coupons(self, loyalty_id: str) -> list[dict[str, Any]]:
         r = await self._request(
             "GET",
             f"/digital-coupons/organizations/{self.organization_id}/loyalty/{loyalty_id}",
@@ -197,14 +199,54 @@ class WegmansClient:
         )
         return (r.json() or {}).get("coupons") or []
 
-    async def clip_coupons(self, loyalty_id: str, offer_ids: list[int]) -> dict[str, Any]:
+    async def clip_meals2go_coupons(self, loyalty_id: str, offer_ids: list[int]) -> dict[str, Any]:
         r = await self._request(
             "POST",
             f"/digital-coupons/organizations/{self.organization_id}/loyalty/{loyalty_id}",
             params={"api-version": "2020-08-24", "Subscription-Key": APIM_SUBSCRIPTION_KEY},
             json=offer_ids,
         )
-        # Some Wegmans endpoints return 200 with empty body
+        try:
+            return r.json() or {}
+        except Exception:
+            return {}
+
+    # ---- Digital coupons (Shop side, 100+ coupons, JWT-scoped) -----------
+
+    async def _cloud_request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
+        """Hit the shop backend (api.digitaldevelopment.wegmans.cloud).
+        Uses the same Bearer JWT as the Meals2Go side (audience matches).
+        No APIM subscription key needed.
+        """
+        token = await self.auth.get_token()
+        headers = kwargs.pop("headers", {}) or {}
+        headers.update({"Authorization": f"Bearer {token}", "Accept": "application/json"})
+        if "json" in kwargs:
+            headers.setdefault("Content-Type", "application/json")
+        url = WEGMANS_CLOUD_BASE + path
+        r = await self._http.request(method, url, headers=headers, **kwargs)
+        r.raise_for_status()
+        return r
+
+    async def list_shop_coupons(self, size: int = 500) -> list[dict[str, Any]]:
+        """List Wegmans shop-side digital coupons (the big set used at grocery
+        checkout — typically 100+). Each item has a `group` of "available"
+        or "clipped".
+        """
+        r = await self._cloud_request(
+            "GET",
+            "/commerce/digital-coupons/offers",
+            params={"api-version": SHOP_COUPONS_API_VERSION, "size": str(size)},
+        )
+        return (r.json() or {}).get("items") or []
+
+    async def clip_shop_coupons(self, offer_ids: list[int]) -> dict[str, Any]:
+        r = await self._cloud_request(
+            "POST",
+            "/commerce/digital-coupons/offers/clip",
+            params={"api-version": SHOP_COUPONS_API_VERSION},
+            json=offer_ids,
+        )
         try:
             return r.json() or {}
         except Exception:

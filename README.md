@@ -103,9 +103,9 @@ claude mcp add wegmans --scope user \
 - `get_current_fulfillment` — see active store + fulfillment
 - `set_fulfillment` — switch store and/or pickup type (Carryout / Curbside / Delivery)
 
-**Digital coupons** (requires `WEGMANS_LOYALTY_ID`):
-- `list_coupons` — list available digital coupons with clipped status
-- `clip_coupons` — clip specific offers, or all unclipped at once
+**Digital coupons:**
+- `list_coupons` — list digital coupons with clipped status. Two sources: `"shop"` (default — the main wegmans.com Shoppers Club coupons, 100+) and `"meals2go"` (smaller set tied to Meals2Go orders, requires `WEGMANS_LOYALTY_ID`)
+- `clip_coupons` — clip specific offers or all unclipped at once. Same `source` parameter as `list_coupons`
 
 ## Example prompts
 

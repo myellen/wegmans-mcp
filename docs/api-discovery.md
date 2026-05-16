@@ -175,8 +175,24 @@ of Google Places + Geocoding (Bearer token required):
 - `POST /guest-idp/token?api-version=2020-01-29` — guest (anonymous) token
 - `GET /order-capture/organizations/1/order-history?api-version=2025-06-04` — past orders
 - `GET /order-capture/delivery-minimum?api-version=2025-06-04`
-- `GET /digital-coupons/organizations/1/loyalty/{loyaltyId}?api-version=2020-08-24`
+- `GET /digital-coupons/organizations/1/loyalty/{loyaltyId}?api-version=2020-08-24` — Meals2Go-side coupons (~10, requires loyalty in URL)
 - `GET /app-config/client/kv?key=...&api-version=2019-04-24`
+
+## Shop-side coupons (api.digitaldevelopment.wegmans.cloud)
+
+The main wegmans.com Digital Coupons page (used at grocery checkout) lives
+on the shop backend, not wegapi. Same Bearer JWT works — the audience
+(`3f54b60f-22ef-4d8f-9424-4dd945675fdd`) is shared across both apps even
+though their `azp` (client_id) differs. **No APIM Subscription-Key
+required** for this backend, and no `X-Include-Auth` header.
+
+- `GET /commerce/digital-coupons/offers?api-version=2024-11-05-preview&size=500` —
+  list (paginated; `size=500` returns all in one call for typical users).
+  Returns `{items: [{id, description, brand, category, group: "available"|"clipped",
+  value, valueText, terms, expirationDate, clipEndDate, ...}], itemCount, pages}`.
+- `POST /commerce/digital-coupons/offers/clip?api-version=2024-11-05-preview` —
+  body is a JSON array of offer IDs, e.g. `[8280450]`. Bulk-supported.
+  Returns 200 (body may be empty).
 
 ## Constants observed in this session
 
