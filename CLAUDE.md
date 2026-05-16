@@ -38,6 +38,14 @@ Tools, auth, and API quirks are documented in `docs/api-discovery.md`.
   2. Size group → `kitList` of sub-kits (Small/Medium/Large = own kit IDs)
   3. Each sub-kit has its own modifier groups, and each topping item may
      have an `itemAttributeSets` (Light / Regular / Extra / On Side)
+- **`get_item_details` returns the full nested tree** in one call —
+  every sub-kit, every option, plus `amount_options` on items that have
+  Light/Regular/Extra. Always start from there before constructing
+  `add_to_cart` selections; never probe kit IDs by guessing.
+- **`add_to_cart` validates before POST.** If any required (min>0)
+  group lacks a selection, the tool raises `ValueError` with a structured
+  list of unsatisfied groups and their available options. Wegmans itself
+  silently accepts under-configured items at $0 — validation prevents that.
 - **PATCH with `quantity: 0` removes** an item. There is no DELETE.
 
 ## Code conventions

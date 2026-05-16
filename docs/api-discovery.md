@@ -83,6 +83,47 @@ Constraints per modifier group (`kitContent`):
 - `allowMultiples` (true → can pick same option N times)
 - `quantityAtNoCharge` (free count; over this incurs `price` per unit)
 
+### Nesting: kits-inside-kits and item attributes
+
+Some kits (subs, wraps, anything `BASEPLUS`-priced) nest **sub-kits** inside a
+modifier group's `kitList`. The classic case is Size on subs:
+
+```
+kit 458 "Chicken Tender" (parent)
+  uiNavigationSections[0].kitContents[0]  kitContentId 884 "Choose size"
+    kitList:
+      - kit 411 "Small"   $6.99   (has its own uiNavigationSections — bread/style/...)
+      - kit 459 "Medium"  $9.99
+      - kit 408 "Large"  $15.99
+```
+
+The same `selections` map drives both layers — `{884: {408: 1}}` picks Large,
+and the chosen sub-kit's own modifier groups (`672 Choose bread`, etc.) live in
+the SAME flat dict at the same level. `build_add_payload()` walks the tree
+recursively, truncating each `kitList` to just the chosen sub-kit and recursing
+into its sections.
+
+Topping items often carry an `itemAttributeSets` for **Light / Regular / Extra**
+(plus "On Side" for mayos):
+
+```
+item 1040 Tomatoes
+  itemAttributeSets[0]
+    attributes:
+      - code: "Light"
+      - code: "Regular" (defaultAttribute)
+      - code: "Extra"
+```
+
+To pick a non-default amount, the SPA truncates `itemAttributeSets[0].attributes`
+to the single chosen attribute and sets `isSelected: true, selectedQuantity: 1`
+on it. Leaving all three in causes the server to silently drop the selection.
+
+**Failure mode:** Wegmans does not validate selections server-side. If you send
+a kit-add with no size picked, the server returns 200 with the item priced at
+$0 and `isAvailable: false`. The MCP `add_to_cart` tool pre-flight validates
+required groups and raises before that ever leaves the wire.
+
 ### Response (cart state)
 
 ```

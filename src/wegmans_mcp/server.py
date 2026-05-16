@@ -28,9 +28,13 @@ def _get_client() -> WegmansClient:
     global _auth, _client
     if _client is None:
         auth_path = Path(os.environ.get("WEGMANS_AUTH_FILE", "auth.json"))
-        store_id = int(os.environ.get("WEGMANS_STORE_ID", "16"))
+        store_id_env = os.environ.get("WEGMANS_STORE_ID")
         _auth = WegmansAuth(auth_file=auth_path)
-        _client = WegmansClient(_auth, store_id=store_id)
+        # If WEGMANS_STORE_ID is unset, let WegmansClient apply its own default.
+        if store_id_env:
+            _client = WegmansClient(_auth, store_id=int(store_id_env))
+        else:
+            _client = WegmansClient(_auth)
     return _client
 
 
@@ -211,39 +215,38 @@ async def browse_category(
     }
 
 
-@mcp.tool()
-async def get_item_details(
-    kit_id: Annotated[int, Field(description="kit_id of the orderable item")],
-) -> dict[str, Any]:
-    """Get full details of a menu item, including required modifier groups and prices.
+def _shape_item(it: dict[str, Any]) -> dict[str, Any]:
+    out = {
+        "item_id": it.get("itemId"),
+        "name": it.get("copyHeader"),
+        "price": it.get("price"),
+        "default_choice": it.get("defaultChoice"),
+        "is_available": it.get("isFulfillmentAvailable"),
+    }
+    sets = it.get("itemAttributeSets") or []
+    if sets:
+        attrs = sets[0].get("attributes") or []
+        codes = [a.get("code") for a in attrs if a.get("code")]
+        default = next((a.get("code") for a in attrs if a.get("defaultAttribute")), None)
+        out["amount_options"] = {"codes": codes, "default": default}
+    return out
 
-    Use this before add_to_cart so you know which kit_content_ids are required
-    and what item_ids you can choose for each modifier group.
-    """
-    client = _get_client()
-    kit = await client.get_kit(kit_id)
-    groups = []
-    for section in kit.get("uiNavigationSections") or []:
-        for kc in section.get("kitContents") or []:
-            groups.append({
-                "kit_content_id": kc.get("kitContentId"),
-                "section_code": section.get("sectionCode"),
-                "prompt": kc.get("kitContentCopyHeader"),
-                "min_quantity": kc.get("minimumOrderQuantity"),
-                "max_quantity": kc.get("maximumOrderQuantity"),
-                "allow_multiples": kc.get("allowMultiples"),
-                "quantity_at_no_charge": kc.get("quantityAtNoCharge"),
-                "options": [
-                    {
-                        "item_id": it.get("itemId"),
-                        "name": it.get("copyHeader"),
-                        "price": it.get("price"),
-                        "default_choice": it.get("defaultChoice"),
-                        "is_available": it.get("isFulfillmentAvailable"),
-                    }
-                    for it in (kc.get("itemList") or [])
-                ],
-            })
+
+def _shape_group(section: dict[str, Any], kc: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "kit_content_id": kc.get("kitContentId"),
+        "section_code": section.get("sectionCode"),
+        "prompt": kc.get("kitContentCopyHeader"),
+        "min_quantity": kc.get("minimumOrderQuantity"),
+        "max_quantity": kc.get("maximumOrderQuantity"),
+        "allow_multiples": kc.get("allowMultiples"),
+        "quantity_at_no_charge": kc.get("quantityAtNoCharge"),
+        "options": [_shape_item(it) for it in (kc.get("itemList") or [])],
+        "sub_kits": [_shape_sub_kit(sk) for sk in (kc.get("kitList") or [])],
+    }
+
+
+def _shape_kit(kit: dict[str, Any]) -> dict[str, Any]:
     return {
         "kit_id": kit.get("kitId"),
         "name": kit.get("copyHeader"),
@@ -253,8 +256,121 @@ async def get_item_details(
         "product_type": kit.get("productType"),
         "is_available": kit.get("isFulfillmentAvailable"),
         "is_promo": kit.get("isPromo"),
-        "modifier_groups": groups,
+        "modifier_groups": [
+            _shape_group(s, kc)
+            for s in (kit.get("uiNavigationSections") or [])
+            for kc in (s.get("kitContents") or [])
+        ],
     }
+
+
+def _shape_sub_kit(sk: dict[str, Any]) -> dict[str, Any]:
+    base = _shape_kit(sk)
+    base["default"] = sk.get("defaultChoice", False)
+    return base
+
+
+@mcp.tool()
+async def get_item_details(
+    kit_id: Annotated[int, Field(description="kit_id of the orderable item")],
+) -> dict[str, Any]:
+    """Get full nested details of a menu item.
+
+    Returns the **complete decision tree** the caller needs to plan an
+    add_to_cart in one call. Each modifier_group has both `options`
+    (leaf items from itemList) and `sub_kits` (kits from kitList — used
+    for Size groups on subs/wraps, where Small/Medium/Large are
+    themselves kits). Each sub-kit carries its own `modifier_groups`,
+    recursively.
+
+    For toppings/condiments/sauces with a Light/Regular/Extra picker,
+    each leaf option includes an `amount_options` field listing the
+    available codes (and which is the default). Pass the chosen code
+    as the `attribute` field in `add_to_cart`'s selection spec.
+
+    Use this before add_to_cart. You should not need any other call to
+    enumerate available choices.
+    """
+    client = _get_client()
+    kit = await client.get_kit(kit_id)
+    return _shape_kit(kit)
+
+
+def _spec_quantity(spec: Any) -> int:
+    if isinstance(spec, int):
+        return spec
+    if isinstance(spec, dict):
+        try:
+            return int(spec.get("quantity", 1))
+        except (TypeError, ValueError):
+            return 1
+    return 0
+
+
+def _validate_selections(kit: dict[str, Any], selections: dict[int, dict[int, Any]]) -> list[dict[str, Any]]:
+    """Walk the kit (recursing into selected sub-kits) and return a list of
+    unsatisfied required modifier groups.
+
+    A group is satisfied when its kitContentId has at least one entry in
+    `selections` whose quantities sum to >= minimumOrderQuantity, and at
+    least one entry's key matches an itemId in itemList or a kitId in
+    kitList for that group.
+    """
+    problems: list[dict[str, Any]] = []
+
+    def walk(sections: list, path: str) -> None:
+        for sec in sections or []:
+            for kc in sec.get("kitContents") or []:
+                kc_id = kc.get("kitContentId")
+                min_q = kc.get("minimumOrderQuantity") or 0
+                chosen = selections.get(kc_id) or {}
+                valid_item_ids = {it.get("itemId") for it in (kc.get("itemList") or [])}
+                valid_kit_ids = {sk.get("kitId") for sk in (kc.get("kitList") or [])}
+                matched = {k: v for k, v in chosen.items() if k in valid_item_ids or k in valid_kit_ids}
+                total_qty = sum(_spec_quantity(v) for v in matched.values())
+
+                if min_q > 0 and total_qty < min_q:
+                    problems.append({
+                        "kit_content_id": kc_id,
+                        "prompt": kc.get("kitContentCopyHeader"),
+                        "path": path,
+                        "min_quantity": min_q,
+                        "selected_quantity": total_qty,
+                        "available_items": [
+                            {"item_id": it.get("itemId"), "name": it.get("copyHeader")}
+                            for it in (kc.get("itemList") or [])
+                        ],
+                        "available_sub_kits": [
+                            {"kit_id": sk.get("kitId"), "name": sk.get("copyHeader")}
+                            for sk in (kc.get("kitList") or [])
+                        ],
+                    })
+
+                for sk in kc.get("kitList") or []:
+                    if sk.get("kitId") in matched:
+                        sub_path = f"{path} > {sk.get('copyHeader') or sk.get('kitId')}" if path else (sk.get("copyHeader") or str(sk.get("kitId")))
+                        walk(sk.get("uiNavigationSections"), sub_path)
+
+    walk(kit.get("uiNavigationSections"), kit.get("copyHeader") or str(kit.get("kitId")))
+    return problems
+
+
+def _format_validation_error(kit_id: int, problems: list[dict[str, Any]]) -> str:
+    lines = [f"Missing required selections for kit_id={kit_id}:"]
+    for p in problems:
+        loc = f" (under {p['path']})" if p.get("path") else ""
+        lines.append(
+            f"  - kit_content_id {p['kit_content_id']} {p['prompt']!r} "
+            f"needs at least {p['min_quantity']} selection(s){loc}, got {p['selected_quantity']}"
+        )
+        if p["available_sub_kits"]:
+            lines.append(f"    available sub_kits: {p['available_sub_kits']}")
+        if p["available_items"]:
+            preview = p["available_items"][:8]
+            more = "" if len(p["available_items"]) == len(preview) else f" (+{len(p['available_items'])-len(preview)} more)"
+            lines.append(f"    available items: {preview}{more}")
+    lines.append("Call get_item_details(kit_id) to see the full decision tree.")
+    return "\n".join(lines)
 
 
 @mcp.tool()
@@ -283,12 +399,21 @@ async def add_to_cart(
 ) -> dict[str, Any]:
     """Add an item to the Meals2Go cart with chosen modifier selections.
 
+    Pre-flight validation rejects under-configured items (any required
+    modifier group with min_quantity > 0 that has no selection) before
+    POSTing, with a structured error listing what's missing and what
+    options are available. This prevents the silent-$0-item failure
+    mode where Wegmans accepts a half-configured kit.
+
     For subs/wraps: many topping items have a Light/Regular/Extra picker
     nested under them. Pass {"quantity": 1, "attribute": "Extra"} (or
     "Light"/"Regular") to specify; default is Regular.
     """
     client = _get_client()
     kit = await client.get_kit(kit_id)
+    problems = _validate_selections(kit, selections)
+    if problems:
+        raise ValueError(_format_validation_error(kit_id, problems))
     payload = client.build_add_payload(kit, selections=selections, quantity=quantity)
     cart = await client.add_to_cart(payload, quantity=quantity, made_for=made_for)
     return _summarize_cart(cart)
