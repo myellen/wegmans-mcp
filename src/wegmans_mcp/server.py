@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -185,12 +186,38 @@ async def list_menu_categories() -> list[dict[str, Any]]:
     return cats
 
 
+_KIT_HREF_RE = re.compile(r"/kits/(\d+)")
+_ITEM_HREF_RE = re.compile(r"/items/(\d+)")
+
+
+def _extract_kit_or_item_id(links: list | None) -> dict[str, int]:
+    """Walk the HAL `links` array and pull out kit_id / item_id when present."""
+    out: dict[str, int] = {}
+    for ln in links or []:
+        href = ln.get("href") or ""
+        if ln.get("rel") == "kit":
+            m = _KIT_HREF_RE.search(href)
+            if m:
+                out["kit_id"] = int(m.group(1))
+        elif ln.get("rel") == "item":
+            m = _ITEM_HREF_RE.search(href)
+            if m:
+                out["item_id"] = int(m.group(1))
+    return out
+
+
 @mcp.tool()
 async def browse_category(
     menu_id: Annotated[int, Field(description="Menu ID (typically 1)")],
     menu_content_id: Annotated[int, Field(description="menuContentId of the category")],
 ) -> dict[str, Any]:
-    """Browse one level deeper into a menu category. Returns the children nodes."""
+    """Browse one level deeper into a menu category. Returns the children nodes.
+
+    For leaf entries the response includes `content_type` ("Kit" / "Item"),
+    plus `kit_id` (when the entry is a configurable kit you can pass to
+    get_item_details / add_to_cart) or `item_id`. Categories carry only
+    `menu_content_id` — pass that back into browse_category to drill in.
+    """
     client = _get_client()
     node = await client.get_menu_children(menu_id, menu_content_id)
     items: list[dict[str, Any]] = []
@@ -198,12 +225,14 @@ async def browse_category(
     for c in node.get("menuContents") or []:
         rec = {
             "name": c.get("copyHeader"),
+            "content_type": c.get("contentType"),
             "menu_content_id": c.get("menuContentId"),
             "content_id": c.get("contentId"),
             "is_available": c.get("isFulfillmentAvailable"),
             "price_range": c.get("menuPriceRange"),
             "is_promo": c.get("isPromo"),
         }
+        rec.update(_extract_kit_or_item_id(c.get("links")))
         if c.get("contentType") == "Category":
             sub_cats.append(rec)
         else:
