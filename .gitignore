@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+
+# uv
+.python-version
+
+# Local secrets / auth state (NEVER commit)
+auth.json
+.env
+*.token
+
+# Playwright artifacts
+.playwright-mcp/
+playwright-report/
+test-results/
+
+# Dev screenshots (browsers save here)
+*.jpeg
+*.jpg
+*.png
+snap-*.yml
+
+# Claude Code internal state
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
