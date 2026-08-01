@@ -1,6 +1,6 @@
 [project]
 name = "wegmans-mcp"
-version = "0.1.0"
+version = "0.3.0"
 description = "MCP server for Wegmans Meals2Go cart manipulation"
 readme = "README.md"
 requires-python = ">=3.11"
