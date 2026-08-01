@@ -36,15 +36,22 @@ uv run python scripts/setup_login.py
 
 This opens a real Chromium window. Have the user click **Sign In** at
 the top of meals2go.com and complete the flow. Once they're back on
-the home page, the script saves `auth.json` and **auto-detects the
-Shoppers Club loyalty number**, writing it to a local `.env` file.
+the home page, the script:
 
-If auto-detect fails (rare — only if the home page doesn't fire the
-digital-coupons request promptly), have them set `WEGMANS_LOYALTY_ID`
-manually in the `.env`. The number is on their Wegmans card or in
-account settings.
+1. saves the Meals2Go session to `auth.json`,
+2. **auto-detects the Shoppers Club loyalty number**, writing it to a
+   local `.env` file,
+3. then loads wegmans.com so the grocery site signs in off the same
+   Wegmans account, and saves that session to `auth-shop.json` —
+   this file is what the grocery **cart** tools need (grocery *search*
+   needs no login at all).
 
-`auth.json` and `.env` are gitignored — treat them like passwords.
+If auto-detect of the loyalty number fails (rare), have them set
+`WEGMANS_LOYALTY_ID` manually in the `.env`. If the wegmans.com step
+prints a warning, grocery cart tools won't work — re-run the script.
+
+`auth.json`, `auth-shop.json`, and `.env` are gitignored — treat them
+like passwords.
 
 ## 4. Wire into the MCP client
 
@@ -90,11 +97,26 @@ claude mcp add wegmans --scope user -- \
 Use `--scope local` to limit to one project. After the command, the
 tools appear in the next session.
 
-## 5. Sanity check
+## 5. Set their home store
 
-Ask Claude: "What's in my Wegmans cart?" The expected response uses
-`mcp__wegmans__view_cart` and reports cart contents (often empty for a
-new user) with the current store + fulfillment.
+The server defaults to store 91 (Amherst St., Buffalo NY). Unless the
+user actually shops there, have them say something like "find my
+Wegmans near <their city/zip> and make it my store" — that runs
+`search_stores` + `set_fulfillment`. To make it permanent, set
+`WEGMANS_STORE_ID=<store_id>` in the `.env` or MCP config so every
+session starts there. Prices and availability are per-store, so skip
+this and everything will quote the wrong store.
 
-If Claude says the tools aren't available, the MCP server didn't load
-— see `troubleshooting.md`.
+## 6. Sanity check
+
+Two quick checks:
+
+- "What's in my Wegmans cart?" → uses `mcp__wegmans__view_cart`
+  (Meals2Go; often empty for a new user) and reports store + fulfillment.
+- "Search Wegmans for bananas" → uses `mcp__wegmans__search_groceries`
+  and returns priced results. This works even if login failed, so if
+  search works but `view_grocery_cart` errors, the problem is
+  `auth-shop.json` — re-run the login script.
+
+If Claude says the tools aren't available at all, the MCP server didn't
+load — see `troubleshooting.md`.

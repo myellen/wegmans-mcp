@@ -49,10 +49,11 @@ uv run python scripts/setup_login.py # a real browser window opens — sign in t
 
 The setup script opens a real Chromium window. Click **Sign In** (top right on meals2go.com) and complete login. Once you're back at the home page logged in, the script:
 
-- Saves your session to `auth.json`.
+- Saves your Meals2Go session to `auth.json`.
 - **Auto-detects your Shoppers Club loyalty number** by sniffing the digital-coupons request the home page fires, and writes it to a `.env` file. The MCP server loads it on startup — you don't need to look up your loyalty number to use `list_coupons` / `clip_coupons`.
+- Loads wegmans.com (which signs in off the same account) and saves that session to `auth-shop.json` — needed by the grocery **cart** tools. Grocery *search* works with no login.
 
-Both files are gitignored. Treat them like passwords — `auth.json` is the equivalent of being logged in on a browser.
+All three files are gitignored. Treat them like passwords — `auth.json` / `auth-shop.json` are the equivalent of being logged in on a browser.
 
 ## Wiring it into Claude Code
 
