@@ -7,12 +7,13 @@ The store_id is fixed at construction time (Meals2Go is store-scoped).
 from __future__ import annotations
 
 import copy
+import json
 import math
 from typing import Any
 
 import httpx
 
-from .auth import WegmansAuth
+from .auth import FallbackAuth, WegmansAuth
 
 WEGAPI_BASE = "https://wegapi.azure-api.net"
 WEGMANS_CLOUD_BASE = "https://api.digitaldevelopment.wegmans.cloud"
@@ -83,14 +84,25 @@ class WegmansClient:
         organization_id: int = DEFAULT_ORGANIZATION_ID,
         fulfillment_type: str = DEFAULT_FULFILLMENT_TYPE,
         radius: str = DEFAULT_RADIUS,
+        shop_auth: WegmansAuth | None = None,
     ):
         self.auth = auth
+        self.shop_auth = shop_auth
+        # Cloud (commerce) calls prefer the shop token but fall back to the
+        # Meals2Go token if the shop mint fails — the coupon endpoints accept
+        # either, and FallbackAuth remembers a dead source so the ~30s failed
+        # mint is paid at most once per session.
+        self._cloud_auth = (
+            FallbackAuth(shop_auth, auth) if shop_auth is not None else auth
+        )
         self.store_id = store_id
         self.storefront_id = storefront_id
         self.organization_id = organization_id
         self.fulfillment_type = fulfillment_type
         self.radius = radius
         self._http = httpx.AsyncClient(base_url=WEGAPI_BASE, timeout=30)
+        self._commerce_customer: dict[str, Any] | None = None
+        self._store_keys: dict[int, str] | None = None
 
     async def aclose(self) -> None:
         await self._http.aclose()
@@ -242,10 +254,12 @@ class WegmansClient:
 
     async def _cloud_request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         """Hit the shop backend (api.digitaldevelopment.wegmans.cloud).
-        Uses the same Bearer JWT as the Meals2Go side (audience matches).
-        No APIM subscription key needed.
+
+        Prefers the shop-site token (which carries the Commerce/Instacart
+        scopes); falls back to the Meals2Go token, which the coupon endpoints
+        accept because the two apps share an audience. No APIM key needed.
         """
-        token = await self.auth.get_token()
+        token = await self._cloud_auth.get_token()
         headers = kwargs.pop("headers", {}) or {}
         headers.update({"Authorization": f"Bearer {token}", "Accept": "application/json"})
         if "json" in kwargs:
@@ -359,6 +373,311 @@ class WegmansClient:
         r.raise_for_status()
         hits = (r.json().get("results") or [{}])[0].get("hits") or []
         return hits[0] if hits else None
+
+    # ---- Grocery cart (commerce backend, captured 2026-08-01) ------------
+    #
+    # The wegmans.com cart is a commercetools cart behind
+    # /commerce/cart/carts/. All mutations echo cartID + cartVersion
+    # (optimistic concurrency — the server bumps version on every write,
+    # so each mutation must re-GET the cart first). The in-store "My List"
+    # and the pickup/delivery cart are the same object; which one the UI
+    # shows is just the cart's fulfillmentType custom field.
+
+    COMMERCE_CART_API_VERSION = "2024-02-19-preview"
+
+    def _require_shop_auth(self) -> None:
+        if self.shop_auth is None:
+            raise RuntimeError(
+                "Grocery cart operations need a wegmans.com login "
+                "(auth-shop.json). Run `uv run python scripts/setup_login.py` "
+                "to create it."
+            )
+
+    async def _get_commerce_customer(self) -> dict[str, Any]:
+        if self._commerce_customer is None:
+            r = await self._cloud_request(
+                "GET", "/commerce/account/customer",
+                params={"api-version": "2024-03-06-preview"},
+            )
+            customer = (r.json() or {}).get("customer") or {}
+            if not customer.get("id"):
+                raise RuntimeError("commerce customer lookup returned no id")
+            self._commerce_customer = customer
+        return self._commerce_customer
+
+    async def _get_store_key(self, store_id: int | None = None) -> str:
+        """StoreKey like '91-AMHERST-ST', from the wegmans.com store list."""
+        sid = int(store_id if store_id is not None else self.store_id)
+        if self._store_keys is None:
+            r = await self._http.get(
+                f"{WEGMANS_WWW_BASE}/api/stores",
+                headers={"Accept": "application/json", "User-Agent": "Mozilla/5.0"},
+            )
+            r.raise_for_status()
+            self._store_keys = {
+                int(s["storeNumber"]): s["key"]
+                for s in r.json()
+                if s.get("storeNumber") is not None and s.get("key")
+            }
+        if sid not in self._store_keys:
+            raise ValueError(f"No wegmans.com store with storeNumber {sid}")
+        return self._store_keys[sid]
+
+    async def get_grocery_cart(self) -> dict[str, Any]:
+        """Fetch the grocery cart. The server creates an empty cart if none
+        exists, so this never 404s for a valid account."""
+        self._require_shop_auth()
+        r = await self._cloud_request(
+            "GET", "/commerce/cart/carts/",
+            params={"api-version": self.COMMERCE_CART_API_VERSION},
+        )
+        body = r.json() or {}
+        if body.get("hasErrorMessage"):
+            raise RuntimeError(f"cart fetch failed: {body.get('errormessage')}")
+        cart = body.get("grocery")
+        if not cart or not cart.get("id"):
+            raise RuntimeError("cart fetch returned no grocery cart")
+        return cart
+
+    @staticmethod
+    def _cart_custom(cart: dict[str, Any]) -> dict[str, Any]:
+        return {
+            f.get("name"): f.get("value")
+            for f in ((cart.get("custom") or {}).get("customFieldsRaw") or [])
+        }
+
+    async def _ensure_grocery_context(self, cart: dict[str, Any]) -> dict[str, Any]:
+        """Align the server-side cart's store/fulfillment with this client's
+        state (changestore), returning the refreshed cart. Items survive the
+        switch — only pricing/availability context changes, matching the
+        wegmans.com UI behavior."""
+        wanted_store = str(self.store_id)
+        wanted_type = self._grocery_channel()
+        current = self._cart_custom(cart)
+        if (current.get("storeNumber") == wanted_store
+                and current.get("fulfillmentType") == wanted_type):
+            return cart
+
+        customer = await self._get_commerce_customer()
+        body = {
+            "cartData": [{
+                "cartID": cart["id"],
+                "cartVersion": cart["version"],
+                "custom": [
+                    {"name": "storeNumber", "value": wanted_store},
+                    {"name": "fulfillmentType", "value": wanted_type},
+                ],
+                "isAlcoholic": bool(cart.get("isAlcoholic")),
+                "lineItems": [],
+                "customLineItems": [],
+            }],
+            "customerEmail": customer.get("email"),
+            "customerId": customer["id"],
+            "storeChanged": current.get("storeNumber") != wanted_store,
+            "storeKey": await self._get_store_key(),
+        }
+        r = await self._cloud_request(
+            "PUT", "/commerce/cart/carts/changestore",
+            params={"api-version": self.COMMERCE_CART_API_VERSION},
+            json=body,
+        )
+        envelope = r.json() or {}
+        if envelope.get("hasErrorMessage") or envelope.get("errors"):
+            raise RuntimeError(
+                "cart store/fulfillment switch failed: "
+                f"{envelope.get('errormessage') or envelope.get('errors')}"
+            )
+        return envelope.get("grocery") or await self.get_grocery_cart()
+
+    def _build_grocery_line_item(
+        self, hit: dict[str, Any], quantity: int
+    ) -> dict[str, Any]:
+        """Shape an Algolia product hit into the cart line-item envelope the
+        SPA sends. Field-for-field from docs/captures/grocery-cart-add-request.json."""
+        channel = self._grocery_channel()
+        price_block = hit.get(GROCERY_PRICE_FIELDS[channel]) or hit.get("price_inStore") or {}
+        amount = price_block.get("amount")
+        if amount is None:
+            raise ValueError(
+                f"Product {hit.get('skuId')} has no {channel} price at store "
+                f"{self.store_id} — it may not be sellable in this channel."
+            )
+        category = (hit.get("category") or [])
+        root_category = category[-1] if category else {}
+        planogram = hit.get("planogram") or {}
+        custom = [
+            {"name": "category", "value": root_category.get("name") or ""},
+            {"name": "categoryId", "value": root_category.get("key") or ""},
+            {"name": "itemLevelAdjustments", "value": "[]"},
+            {"name": "isSoldAtStore", "value": bool(hit.get("isSoldAtStore"))},
+            {"name": "ebtEligible", "value": bool(hit.get("ebtEligible"))},
+            {"name": "isAvailable", "value": bool(hit.get("isAvailable"))},
+            {"name": "planogram", "value": json.dumps(
+                {
+                    "aisle": planogram.get("aisle"),
+                    "shelf": planogram.get("shelf"),
+                    "aisleSide": planogram.get("aisleSide"),
+                    "category": planogram.get("category"),
+                    "section": planogram.get("section"),
+                    "sortRank": planogram.get("sortRank"),
+                },
+                separators=(",", ":"),
+            )},
+            {"name": "note", "value": ""},
+            {"name": "bottleDeposit", "value": hit.get("bottleDeposit") or 0},
+            {"name": "upc", "value": hit.get("upc") or []},
+            {"name": "fulfillmentTypes", "value": hit.get("fulfilmentType") or []},
+            {"name": "maxQuantity", "value": str(hit.get("maxQuantity") or 99)},
+        ]
+        return {
+            "custom": custom,
+            "distributionChannelKey": price_block.get("channelKey")
+            or f"{self.store_id}-Instore",
+            "isAlcoholic": bool(hit.get("isAlcoholItem")),
+            "isSoldByWeight": bool(hit.get("isSoldByWeight")),
+            "onlineApproxUnitWeight": hit.get("onlineApproxUnitWeight") or 0,
+            "onlineSellByUnit": hit.get("onlineSellByUnit") or "ea",
+            "quantity": quantity,
+            "sku": str(hit.get("skuId")),
+            "standalonePrice": round(float(amount) * 100),
+        }
+
+    async def add_grocery_to_cart(
+        self, sku_id: str, quantity: int = 1
+    ) -> dict[str, Any]:
+        """Add a catalog product to the grocery cart at the current store and
+        fulfillment channel. Returns the updated cart."""
+        self._require_shop_auth()
+        if quantity < 1:
+            raise ValueError("quantity must be >= 1 (use remove to delete)")
+        hit = await self.get_grocery_product(sku_id)
+        if hit is None:
+            raise ValueError(
+                f"No product with sku_id={sku_id!r} at store {self.store_id}."
+            )
+        max_qty = int(hit.get("maxQuantity") or 99)
+        if quantity > max_qty:
+            raise ValueError(
+                f"Quantity {quantity} exceeds the per-order limit of {max_qty} "
+                f"for {hit.get('productName')!r}."
+            )
+        cart = await self._ensure_grocery_context(await self.get_grocery_cart())
+        customer = await self._get_commerce_customer()
+        body = {
+            "StoreKey": await self._get_store_key(),
+            "cartData": [{
+                "cartID": cart["id"],
+                "cartVersion": cart["version"],
+                "custom": [
+                    {"name": "orderLevelAdjustments", "value": "[]"},
+                    {"name": "storeNumber", "value": str(self.store_id)},
+                    {"name": "fulfillmentType", "value": self._grocery_channel()},
+                ],
+                "isAlcoholic": bool(cart.get("isAlcoholic")),
+                "lineItems": [self._build_grocery_line_item(hit, quantity)],
+            }],
+            "customerEmail": customer.get("email"),
+            "customerID": customer["id"],
+        }
+        r = await self._cloud_request(
+            "POST", "/commerce/cart/carts/lineitems",
+            params={"api-version": self.COMMERCE_CART_API_VERSION},
+            json=body,
+        )
+        return self._grocery_mutation_result(r)
+
+    async def update_grocery_quantity(
+        self, sku_id: str, quantity: int
+    ) -> dict[str, Any]:
+        """Set the quantity of a cart line item. quantity=0 removes it."""
+        self._require_shop_auth()
+        if quantity == 0:
+            return await self.remove_grocery_from_cart(sku_id)
+        cart = await self._ensure_grocery_context(await self.get_grocery_cart())
+        line = self._find_line_item(cart, sku_id)
+        li_custom = {
+            f.get("name"): f.get("value")
+            for f in ((line.get("custom") or {}).get("customFieldsRaw") or [])
+        }
+        max_qty = int(li_custom.get("maxQuantity") or 99)
+        if quantity > max_qty:
+            raise ValueError(
+                f"Quantity {quantity} exceeds the per-order limit of {max_qty}."
+            )
+        unit_cents = ((line.get("price") or {}).get("value") or {}).get("centAmount")
+        variant_attrs = {
+            a.get("name"): a.get("value")
+            for a in ((line.get("variant") or {}).get("attributesRaw") or [])
+        }
+        body = {
+            "cartData": [{
+                "cartID": cart["id"],
+                "cartVersion": cart["version"],
+                "isAlcoholic": bool(cart.get("isAlcoholic")),
+                "lineItems": [{
+                    "centAmount": unit_cents,
+                    "custom": [
+                        {"name": "isSoldAtStore", "value": bool(li_custom.get("isSoldAtStore", True))},
+                        {"name": "isAvailable", "value": bool(li_custom.get("isAvailable", True))},
+                        {"name": "itemLevelAdjustments", "value": "[]"},
+                    ],
+                    "isSoldByWeight": bool(variant_attrs.get("isSoldByWeight")),
+                    "maxQtyAllowed": max_qty,
+                    "onlineApproxUnitWeight": variant_attrs.get("onlineApproxUnitWeight") or 0,
+                    "onlineSellByUnit": variant_attrs.get("onlineSellByUnit") or "ea",
+                    "quantity": quantity,
+                    "sku": str(sku_id),
+                    "standalonePrice": unit_cents,
+                }],
+            }],
+        }
+        r = await self._cloud_request(
+            "PUT", "/commerce/cart/carts/lineitems/quantity",
+            params={"api-version": self.COMMERCE_CART_API_VERSION},
+            json=body,
+        )
+        return self._grocery_mutation_result(r)
+
+    async def remove_grocery_from_cart(self, sku_id: str) -> dict[str, Any]:
+        self._require_shop_auth()
+        cart = await self._ensure_grocery_context(await self.get_grocery_cart())
+        self._find_line_item(cart, sku_id)  # raises if absent
+        body = {
+            "cartData": [{
+                "cartID": cart["id"],
+                "cartVersion": cart["version"],
+                "custom": [{"name": "orderLevelAdjustments", "value": "[]"}],
+                "isAlcoholic": bool(cart.get("isAlcoholic")),
+                "lineItems": [{"sku": str(sku_id)}],
+            }],
+        }
+        r = await self._cloud_request(
+            "PUT", "/commerce/cart/carts/itemdeletion",
+            params={"api-version": self.COMMERCE_CART_API_VERSION},
+            json=body,
+        )
+        return self._grocery_mutation_result(r)
+
+    @staticmethod
+    def _find_line_item(cart: dict[str, Any], sku_id: str) -> dict[str, Any]:
+        for li in cart.get("lineItems") or []:
+            if str(li.get("productKey")) == str(sku_id):
+                return li
+        skus = [li.get("productKey") for li in cart.get("lineItems") or []]
+        raise ValueError(
+            f"No cart item with sku {sku_id!r}. Cart contains: {skus or 'nothing'}"
+        )
+
+    def _grocery_mutation_result(self, r: httpx.Response) -> dict[str, Any]:
+        body = r.json() or {}
+        if body.get("hasErrorMessage") or body.get("errors"):
+            raise RuntimeError(
+                f"cart mutation failed: {body.get('errormessage') or body.get('errors')}"
+            )
+        cart = body.get("grocery")
+        if not cart:
+            raise RuntimeError("cart mutation returned no cart body")
+        return cart
 
     # ---- Locations -------------------------------------------------------
 

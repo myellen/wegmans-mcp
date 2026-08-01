@@ -269,25 +269,80 @@ from another chain.
 - `GET /api/categories/v3/instore/{storeNumber}?categoryKeys=[...]` —
   category tree.
 
-### Grocery cart — NOT YET MAPPED
+### Grocery cart (captured live 2026-08-01)
 
-The cart is fully auth-gated and could not be captured. Anonymously the
-product tile button is "add to **list**", which is client-side only and
-fires no API call; signed-out users get "Sign in to build a cart or list."
+A commercetools cart behind `/commerce/cart/carts/` on the commerce
+backend. Raw request/response captures in `docs/captures/grocery-cart-*`.
+Earlier speculation was wrong on both counts: the cart is plain REST
+(SignalR is only used for order-status push), and Instacart Connect only
+provides pickup/delivery service options (windows, fees) — not the cart.
 
-The grocery SPA authenticates as a **different MSAL client** than Meals2Go
-(`azp` `38c78f8d-d124-4796-8430-1cd476d9a982`) requesting
-`Commerce.SignalR`, `InstacartConnect.*`, `Users.Profile.*`. Notably it
-**does** request `offline_access` (Meals2Go does not), so the grocery side
-may support proper refresh tokens.
+**The in-store "My List" and the pickup/delivery cart are the same
+object.** Which UI you get is just the cart's `fulfillmentType` custom
+field (`instore` / `pickup` / `delivery`). Items survive context switches;
+only pricing/availability recompute.
 
-`Commerce.SignalR` + `InstacartConnect.Fulfillment` in the scope list
-suggests the grocery cart is (a) pushed over SignalR rather than a plain
-REST resource, and (b) fulfilled through Instacart Connect. Both need
-confirming against a live capture before writing any client code.
+| Operation | Call |
+|---|---|
+| Read (creates if absent) | `GET /commerce/cart/carts/?api-version=2024-02-19-preview` |
+| Add line item | `POST /commerce/cart/carts/lineitems?api-version=...` |
+| Change quantity | `PUT /commerce/cart/carts/lineitems/quantity?api-version=...` |
+| Remove line item | `PUT /commerce/cart/carts/itemdeletion?api-version=...` |
+| Switch store / fulfillment | `PUT /commerce/cart/carts/changestore?api-version=...` |
 
-To capture: re-run `scripts/setup_login.py` (it now warms wegmans.com as
-well), then drive an add-to-cart in the UI and record the traffic.
+Mechanics that matter:
+
+- **Optimistic concurrency.** Every mutation echoes `cartID` +
+  `cartVersion` from a fresh GET. The server bumps the version several
+  times per operation (observed 15 → 33 on a single add), so never reuse
+  a stale version.
+- **The client sends the product data.** The add payload carries category,
+  planogram, UPCs, `standalonePrice` (unit cents), etc. — all sourced from
+  the Algolia hit. The server re-prices authoritatively, though: a Hot
+  Zone banana sent at 19¢ came back priced 10¢. Client-sent prices cannot
+  corrupt totals.
+- **`distributionChannelKey`** is the Algolia price block's `channelKey`
+  (`91-Instore` / `91-Delivery`).
+- **Deletion needs only `{sku}`** in `lineItems` (plus cart id/version).
+- **Emptied carts get recycled.** After the last item is removed the next
+  GET may return a brand-new cart id at version 1. Don't persist cart ids.
+- **Casing trap:** the add body says `customerID`; changestore says
+  `customerId`. Sent verbatim per capture.
+- `customerEmail`/`customerID` come from
+  `GET /commerce/account/customer?api-version=2024-03-06-preview`
+  (`customer.id` is the commercetools id; `customer.key` equals the JWT's
+  `extension_Customer_ID`).
+- `StoreKey` (e.g. `91-AMHERST-ST`) comes from the `key` field in
+  `GET https://www.wegmans.com/api/stores`.
+
+### Shop-side auth (works headlessly)
+
+Same silent-renewal strategy as Meals2Go but seeded from a wegmans.com
+session (`auth-shop.json`, written by `setup_login.py`): load the storage
+state, open `https://www.wegmans.com/`, harvest the Bearer off the first
+`api.digitaldevelopment.wegmans.cloud` request (~2.5s headless). The shop
+MSAL client requests `offline_access`, so its cache holds a refresh token
+and silent renewal keeps working long-term — unlike Meals2Go.
+
+**The shop token is accepted by BOTH backends** (verified live): the
+commerce API *and* wegapi (Meals2Go cart, with the APIM key). Shared
+audience, superset scopes. A wegmans.com login can therefore power the
+entire server; the reverse is untested (the Meals2Go token's scopes lack
+`InstacartConnect.*` / `Commerce.*`, and it was expired at capture time).
+
+Other authenticated commerce endpoints observed:
+
+- `GET /users/profile?api-version=2023-05-18`
+- `GET /commerce/account/addresses?api-version=2024-03-06-preview`
+- `GET /commerce/order/orders/activeorders?api-version=2024-03-04-preview`
+- `GET /commerce/saved-list/savedlists?api-version=2024-02-20-preview`
+- `GET /commerce/my-items?api-version=2024-01-26`
+- `GET /commerce/browse/products/?productid=...&storeNumber=91&api-version=2023-09-22`
+  — batch product detail (server-side alternative to Algolia)
+- `POST /commerce/instacart/fulfillment/service_options/pickup?api-version=2023-11-13-preview`
+  — pickup windows/fees, body `{cart_total_cents, items_count, location_code}`
+- `POST /commerce/signalr/orders/negotiate?api-version=2024-03-18-preview`
+- `POST /cooklist/v2/graphql` — recipes/cooking content
 
 ## Constants observed in this session
 

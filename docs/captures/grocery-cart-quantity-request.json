@@ -1,0 +1,38 @@
+{
+  "_endpoint": "PUT https://api.digitaldevelopment.wegmans.cloud/commerce/cart/carts/lineitems/quantity?api-version=2024-02-19-preview",
+  "body": {
+    "cartData": [
+      {
+        "cartID": "<CART_ID>",
+        "cartVersion": 43,
+        "isAlcoholic": false,
+        "lineItems": [
+          {
+            "centAmount": 19,
+            "custom": [
+              {
+                "name": "isSoldAtStore",
+                "value": true
+              },
+              {
+                "name": "isAvailable",
+                "value": true
+              },
+              {
+                "name": "itemLevelAdjustments",
+                "value": "[]"
+              }
+            ],
+            "isSoldByWeight": true,
+            "maxQtyAllowed": 99,
+            "onlineApproxUnitWeight": 0.38,
+            "onlineSellByUnit": "Each",
+            "quantity": 2,
+            "sku": "92685",
+            "standalonePrice": 19
+          }
+        ]
+      }
+    ]
+  }
+}

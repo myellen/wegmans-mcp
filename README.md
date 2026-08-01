@@ -10,19 +10,24 @@ Let Claude run your Wegmans Meals2Go cart. Ask Claude things like:
 
 > "What does Wegmans charge for organic whole milk at the Amherst St. store?"
 
-Claude (in Claude Code, Claude Desktop, or any MCP-compatible client) gets
-15 tools for browsing the menu, finding stores, configuring fulfillment,
-managing cart items, naming them ("for Dad", "for Akanksha"), clipping
-Shoppers Club coupons, and searching the grocery catalog. It does **not**
-place the final order — you still hit Checkout yourself.
+> "Here's my Whole Foods list — build it as a Wegmans pickup cart."
 
-**Prepared food vs. groceries.** Cart tools drive the *Meals2Go* cart
-(subs, pizza, wings). The two grocery tools — `search_groceries` and
-`get_grocery_product` — search the regular supermarket catalog for prices,
-pack sizes, aisles, dietary tags, and nutrition. Grocery search needs no
-login at all. There is **no grocery cart yet**: Claude can price out a
-shopping list and tell you what Wegmans carries, but can't add those items
-to an order.
+Claude (in Claude Code, Claude Desktop, or any MCP-compatible client) gets
+19 tools for browsing the menu, finding stores, configuring fulfillment,
+managing cart items, naming them ("for Dad", "for Akanksha"), clipping
+Shoppers Club coupons, searching the grocery catalog, and building a
+grocery cart. It does **not** place the final order — you still hit
+Checkout yourself.
+
+**Prepared food vs. groceries.** These are two separate carts. The
+Meals2Go tools (`add_to_cart`, `view_cart`, ...) drive prepared food —
+subs, pizza, wings. The grocery tools search the regular supermarket
+catalog (`search_groceries`, `get_grocery_product` — no login needed) and
+manage the wegmans.com cart (`view_grocery_cart`, `add_grocery_to_cart`,
+`update_grocery_cart_item`, `remove_grocery_from_cart` — needs the
+wegmans.com login from setup). The grocery cart doubles as the in-store
+"My List" on wegmans.com and the app, so a converted shopping list shows
+up on your phone, sorted by aisle, when you walk into the store.
 
 ## Setup (one-time, ~5 minutes)
 
@@ -96,7 +101,7 @@ claude mcp add wegmans --scope user \
 
 ## What it can do
 
-**Cart:**
+**Meals2Go cart (prepared food):**
 - `view_cart` — see items, totals, current store/fulfillment, selected modifiers
 - `add_to_cart` — add an item with chosen modifiers (and optionally a name)
 - `update_cart_item_quantity` — change quantity (0 to remove)
@@ -117,6 +122,14 @@ claude mcp add wegmans --scope user \
 - `list_coupons` — list digital coupons with clipped status. Two sources: `"shop"` (default — the main wegmans.com Shoppers Club coupons, 100+) and `"meals2go"` (smaller set tied to Meals2Go orders, requires `WEGMANS_LOYALTY_ID`)
 - `clip_coupons` — clip specific offers or all unclipped at once. Same `source` parameter as `list_coupons`
 
+**Groceries (wegmans.com):**
+- `search_groceries` — search the supermarket catalog: prices per channel, pack sizes, aisles, dietary tags (works with no login)
+- `get_grocery_product` — full detail for one product: nutrition, ingredients, allergens, both channel prices
+- `view_grocery_cart` — see the wegmans.com grocery cart (a.k.a. in-store "My List")
+- `add_grocery_to_cart` — add a catalog item at the current store/fulfillment
+- `update_grocery_cart_item` — change quantity (0 removes)
+- `remove_grocery_from_cart` — remove an item
+
 ## Example prompts
 
 Once the server is wired in, you can say things like:
@@ -125,6 +138,8 @@ Once the server is wired in, you can say things like:
 - "Add a large chicken tender sub on sesame, buffalo style, all the free toppings, extra hot banana peppers. Call it 'for Max'."
 - "What stores within 10 miles of 22030 offer delivery?"
 - "Clip all my coupons."
+- "Here's my Whole Foods list — find the Wegmans equivalents and build my pickup cart."
+- "Put a dozen organic eggs and two half-gallons of whole milk on my list."
 - "What's in my cart and what's the total?"
 - "Remove the wrap."
 

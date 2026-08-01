@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 from pathlib import Path
@@ -11,7 +12,7 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
-from .auth import WegmansAuth
+from .auth import SHOP_AUTH_FILE, FallbackAuth, WegmansAuth, shop_auth
 from .client import GROCERY_PRICE_FIELDS, WegmansClient
 
 # Load .env from the current working directory if present. setup_login.py
@@ -29,13 +30,26 @@ def _get_client() -> WegmansClient:
     global _auth, _client
     if _client is None:
         auth_path = Path(os.environ.get("WEGMANS_AUTH_FILE", "auth.json"))
+        shop_auth_path = Path(os.environ.get("WEGMANS_SHOP_AUTH_FILE", str(SHOP_AUTH_FILE)))
         store_id_env = os.environ.get("WEGMANS_STORE_ID")
-        _auth = WegmansAuth(auth_file=auth_path)
-        # If WEGMANS_STORE_ID is unset, let WegmansClient apply its own default.
-        if store_id_env:
-            _client = WegmansClient(_auth, store_id=int(store_id_env))
+
+        shop = shop_auth(shop_auth_path) if shop_auth_path.exists() else None
+        # The shop token is accepted by the Meals2Go backend too (shared
+        # audience, superset scopes — verified 2026-08-01), so a wegmans.com
+        # login can carry the whole server when auth.json is missing or its
+        # saved session has expired.
+        meals = WegmansAuth(auth_file=auth_path) if auth_path.exists() else None
+        if meals is not None and shop is not None:
+            _auth = FallbackAuth(meals, shop)
         else:
-            _client = WegmansClient(_auth)
+            # Exactly one (or neither) exists; a missing-file WegmansAuth
+            # raises a helpful setup message on first use.
+            _auth = meals or shop or WegmansAuth(auth_file=auth_path)
+
+        kwargs: dict = {"shop_auth": shop}
+        if store_id_env:
+            kwargs["store_id"] = int(store_id_env)
+        _client = WegmansClient(_auth, **kwargs)
     return _client
 
 
@@ -712,6 +726,89 @@ async def get_grocery_product(
         },
     })
     return detail
+
+
+def _summarize_grocery_cart(cart: dict[str, Any]) -> dict[str, Any]:
+    custom = WegmansClient._cart_custom(cart)
+    items = []
+    for li in cart.get("lineItems") or []:
+        li_custom = {
+            f.get("name"): f.get("value")
+            for f in ((li.get("custom") or {}).get("customFieldsRaw") or [])
+        }
+        prices = li.get("lineItemPrice") or {}
+        unit_cents = ((li.get("price") or {}).get("value") or {}).get("centAmount")
+        planogram = {}
+        try:
+            planogram = json.loads(li_custom.get("planogram") or "{}")
+        except Exception:
+            pass
+        items.append({
+            "sku_id": li.get("productKey"),
+            "name": li.get("name"),
+            "quantity": li.get("quantity"),
+            "unit_price": (unit_cents or 0) / 100 if unit_cents is not None else None,
+            "line_total": (prices.get("totalPrice") or 0) / 100,
+            "savings": (prices.get("totalSavings") or 0) / 100,
+            "is_available": li_custom.get("isAvailable"),
+            "aisle": planogram.get("aisle"),
+            "note": li_custom.get("note") or None,
+        })
+    cart_price = cart.get("cartPrice") or {}
+    return {
+        "cart_id": cart.get("id"),
+        "store_number": custom.get("storeNumber"),
+        "fulfillment_type": custom.get("fulfillmentType"),
+        "item_count": cart.get("totalLineItemQuantity") or 0,
+        "total_price": (cart_price.get("totalPrice") or 0) / 100,
+        "total_savings": (cart_price.get("totalSavings") or 0) / 100,
+        "items": items,
+    }
+
+
+@mcp.tool()
+async def view_grocery_cart() -> dict[str, Any]:
+    """Get the wegmans.com grocery cart (a.k.a. "My List" when shopping
+    in-store). Separate from the Meals2Go prepared-food cart (`view_cart`).
+    """
+    client = _get_client()
+    cart = await client.get_grocery_cart()
+    return _summarize_grocery_cart(cart)
+
+
+@mcp.tool()
+async def add_grocery_to_cart(
+    sku_id: Annotated[str, Field(description="sku_id from search_groceries")],
+    quantity: Annotated[int, Field(description="How many (default 1)")] = 1,
+) -> dict[str, Any]:
+    """Add a grocery product to the wegmans.com cart at the current store and
+    fulfillment channel. Requires a wegmans.com login (auth-shop.json).
+    NOT for Meals2Go prepared food — use `add_to_cart` for that.
+    """
+    client = _get_client()
+    cart = await client.add_grocery_to_cart(sku_id, quantity=quantity)
+    return _summarize_grocery_cart(cart)
+
+
+@mcp.tool()
+async def update_grocery_cart_item(
+    sku_id: Annotated[str, Field(description="sku_id of an item already in the cart")],
+    quantity: Annotated[int, Field(description="New quantity; 0 removes the item")],
+) -> dict[str, Any]:
+    """Change the quantity of a grocery cart item (0 removes it)."""
+    client = _get_client()
+    cart = await client.update_grocery_quantity(sku_id, quantity)
+    return _summarize_grocery_cart(cart)
+
+
+@mcp.tool()
+async def remove_grocery_from_cart(
+    sku_id: Annotated[str, Field(description="sku_id of an item already in the cart")],
+) -> dict[str, Any]:
+    """Remove an item from the grocery cart entirely."""
+    client = _get_client()
+    cart = await client.remove_grocery_from_cart(sku_id)
+    return _summarize_grocery_cart(cart)
 
 
 def main() -> None:

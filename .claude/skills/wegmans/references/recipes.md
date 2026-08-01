@@ -105,6 +105,12 @@ await set_fulfillment(store_id=91, fulfillment_type="delivery")
 await search_groceries(query="organic whole milk", limit=5)
 ```
 
+To *build the cart* (not just price it), follow each match with
+`add_grocery_to_cart(sku_id=..., quantity=...)`. Needs the wegmans.com
+login (`auth-shop.json`). Confirm the store and fulfillment type with the
+user BEFORE adding — the cart re-prices when the channel changes, and an
+in-store cart shows up as their "My List" in the Wegmans app, aisle-sorted.
+
 Mapping rules that matter:
 
 - **Store brand → store brand.** Whole Foods 365 and Trader Joe's private
@@ -125,5 +131,5 @@ Mapping rules that matter:
 exists for it — worth mentioning, and `clip_coupons` can clip them.
 
 Deliver the result as a table (item, Wegmans product, size, unit price,
-line total) plus an explicit list of anything you couldn't match. **Do not
-offer to add these to a cart — there is no grocery cart.**
+line total) plus an explicit list of anything you couldn't match, then
+offer to add the matches to the grocery cart.

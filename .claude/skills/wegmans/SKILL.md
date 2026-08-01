@@ -1,29 +1,36 @@
 ---
 name: wegmans
-description: Place, modify, and inspect Wegmans Meals2Go orders, search the Wegmans grocery catalog for prices and products, and clip Wegmans digital coupons via the wegmans-mcp MCP server. Use when the user mentions Wegmans, Meals2Go, ordering a sub/wrap/pizza/bowl from Wegmans, "my cart" in a Wegmans context, Shoppers Club / digital coupons, switching pickup type (Carryout / Curbside / Delivery), finding a specific Wegmans store, or pricing/finding grocery items at Wegmans (including converting a shopping list from another chain). Includes recipes for the menu's nested kit structure, the topping Light/Regular/Extra attribute, and onboarding a new user who doesn't have the MCP server installed yet. Do NOT use for recipe ideas or other supermarket chains.
+description: Place, modify, and inspect Wegmans Meals2Go orders, search the Wegmans grocery catalog, build the wegmans.com grocery cart / shopping list, and clip Wegmans digital coupons via the wegmans-mcp MCP server. Use when the user mentions Wegmans, Meals2Go, ordering a sub/wrap/pizza/bowl from Wegmans, "my cart" or "my list" in a Wegmans context, Shoppers Club / digital coupons, switching pickup type (Carryout / Curbside / Delivery), finding a specific Wegmans store, or pricing/buying grocery items at Wegmans (including converting a shopping list from another chain into a Wegmans cart). Includes recipes for the menu's nested kit structure, the topping Light/Regular/Extra attribute, and onboarding a new user who doesn't have the MCP server installed yet. Do NOT use for recipe ideas or other supermarket chains.
 ---
 
 # Wegmans Meals2Go via wegmans-mcp
 
 The `wegmans-mcp` MCP server (https://github.com/myellen/wegmans-mcp) exposes
-15 tools under `mcp__wegmans__*` for the Wegmans Meals2Go API, the grocery
-catalog, plus Shoppers Club coupons. This skill captures the non-obvious
+tools under `mcp__wegmans__*` for the Wegmans Meals2Go API, the grocery
+catalog and cart, plus Shoppers Club coupons. This skill captures the non-obvious
 knowledge you need to use them well — the menu's nesting quirks, the topping
 attribute encoding, and how to onboard a new user.
 
-## Two storefronts — don't mix them up
+## Two storefronts, two carts — don't mix them up
 
 | You want | Use | Auth |
 |---|---|---|
-| Subs, pizza, wings, bowls | `list_menu_categories`, `get_item_details`, `add_to_cart` | required |
-| Milk, eggs, produce, packaged goods | `search_groceries`, `get_grocery_product` | **none** |
+| Subs, pizza, wings, bowls | `list_menu_categories`, `get_item_details`, `add_to_cart`, `view_cart` | required |
+| Find/price groceries | `search_groceries`, `get_grocery_product` | **none** |
+| Build a grocery cart / list | `view_grocery_cart`, `add_grocery_to_cart`, `update_grocery_cart_item`, `remove_grocery_from_cart` | required (wegmans.com login) |
 
-`add_to_cart` only takes Meals2Go kits. **There is no grocery cart.** You can
-price a grocery list and say what Wegmans carries; you cannot place it in an
-order. Never imply otherwise — offer the priced list as the deliverable.
+`add_to_cart` only takes Meals2Go kits; `add_grocery_to_cart` only takes
+grocery SKUs. The two carts are separate systems and check out separately.
+
+The grocery cart doubles as the wegmans.com/app "My List" when the
+fulfillment type is in-store — items you add show up on the user's phone
+sorted by aisle. Neither cart places the final order; the user hits
+Checkout themselves.
 
 Grocery search works even when auth is broken or the user has never logged
-in, so it's the right fallback when cart tools fail.
+in, so it's the right fallback when cart tools fail. Cart prices are
+recomputed server-side (promos apply), so the cart's line total can come
+back *lower* than the search price — mention savings, don't "correct" them.
 
 ## Before doing anything
 

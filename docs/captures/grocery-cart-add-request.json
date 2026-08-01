@@ -1,0 +1,101 @@
+{
+  "_endpoint": "POST https://api.digitaldevelopment.wegmans.cloud/commerce/cart/carts/lineitems?api-version=2024-02-19-preview",
+  "body": {
+    "StoreKey": "91-AMHERST-ST",
+    "cartData": [
+      {
+        "cartID": "<CART_ID>",
+        "cartVersion": 15,
+        "custom": [
+          {
+            "name": "orderLevelAdjustments",
+            "value": "[]"
+          },
+          {
+            "name": "storeNumber",
+            "value": "91"
+          },
+          {
+            "name": "fulfillmentType",
+            "value": "instore"
+          }
+        ],
+        "isAlcoholic": false,
+        "lineItems": [
+          {
+            "custom": [
+              {
+                "name": "category",
+                "value": "Produce & Floral"
+              },
+              {
+                "name": "categoryId",
+                "value": "2957052"
+              },
+              {
+                "name": "itemLevelAdjustments",
+                "value": "[]"
+              },
+              {
+                "name": "isSoldAtStore",
+                "value": true
+              },
+              {
+                "name": "ebtEligible",
+                "value": true
+              },
+              {
+                "name": "isAvailable",
+                "value": true
+              },
+              {
+                "name": "planogram",
+                "value": "{\"aisle\":\"Produce\",\"shelf\":null,\"aisleSide\":null,\"category\":null,\"section\":null,\"sortRank\":null}"
+              },
+              {
+                "name": "note",
+                "value": ""
+              },
+              {
+                "name": "bottleDeposit",
+                "value": 0
+              },
+              {
+                "name": "upc",
+                "value": [
+                  "00000000040112",
+                  "00643126040118",
+                  "00643126071631",
+                  "02004011000002",
+                  "00204011000008"
+                ]
+              },
+              {
+                "name": "fulfillmentTypes",
+                "value": [
+                  "instore",
+                  "pickup",
+                  "delivery"
+                ]
+              },
+              {
+                "name": "maxQuantity",
+                "value": "99"
+              }
+            ],
+            "distributionChannelKey": "91-Instore",
+            "isAlcoholic": false,
+            "isSoldByWeight": false,
+            "onlineApproxUnitWeight": 0.38,
+            "onlineSellByUnit": "Each",
+            "quantity": 1,
+            "sku": "92685",
+            "standalonePrice": 19
+          }
+        ]
+      }
+    ],
+    "customerEmail": "<EMAIL>",
+    "customerID": "<COMMERCE_CUSTOMER_ID>"
+  }
+}

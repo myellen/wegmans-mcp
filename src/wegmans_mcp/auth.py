@@ -27,6 +27,14 @@ TOKEN_TRIGGER_URL = "https://www.meals2go.com/"
 API_HOST_SUBSTRING = "wegapi.azure-api.net"
 B2C_ISSUER_SUBSTRING = "myaccount.wegmans.com"
 
+# The grocery site (wegmans.com) is a different MSAL client with its own
+# token cache, so it needs its own storage-state file and trigger URL. Its
+# SPA fires authenticated calls to the commerce backend on load, which is
+# where we harvest the token.
+SHOP_TRIGGER_URL = "https://www.wegmans.com/"
+SHOP_API_HOST_SUBSTRING = "api.digitaldevelopment.wegmans.cloud"
+SHOP_AUTH_FILE = Path("auth-shop.json")
+
 DEFAULT_AUTH_FILE = Path("auth.json")
 TOKEN_REFRESH_LEEWAY_SEC = 300  # refresh 5 min before expiry
 
@@ -57,8 +65,15 @@ def _decode_exp(jwt: str) -> float:
 
 
 class WegmansAuth:
-    def __init__(self, auth_file: Path = DEFAULT_AUTH_FILE):
+    def __init__(
+        self,
+        auth_file: Path = DEFAULT_AUTH_FILE,
+        trigger_url: str = TOKEN_TRIGGER_URL,
+        api_host_substring: str = API_HOST_SUBSTRING,
+    ):
         self.auth_file = auth_file
+        self.trigger_url = trigger_url
+        self.api_host_substring = api_host_substring
         self._token: CachedToken | None = None
         self._lock = asyncio.Lock()
 
@@ -75,7 +90,6 @@ class WegmansAuth:
                 f"Auth file {self.auth_file} missing. "
                 "Run `uv run python scripts/setup_login.py` to log in."
             )
-
         async with async_playwright() as pw:
             browser = await pw.chromium.launch(headless=True)
             try:
@@ -85,7 +99,7 @@ class WegmansAuth:
                 captured: asyncio.Future[str] = asyncio.Future()
 
                 def on_request(req):
-                    if captured.done() or API_HOST_SUBSTRING not in req.url:
+                    if captured.done() or self.api_host_substring not in req.url:
                         return
                     auth = req.headers.get("authorization")
                     if not (auth and auth.lower().startswith("bearer ")):
@@ -95,8 +109,16 @@ class WegmansAuth:
                         captured.set_result(jwt)
 
                 page.on("request", on_request)
-                await page.goto(TOKEN_TRIGGER_URL, wait_until="domcontentloaded")
-                jwt = await asyncio.wait_for(captured, timeout=20)
+                await page.goto(self.trigger_url, wait_until="domcontentloaded")
+                try:
+                    jwt = await asyncio.wait_for(captured, timeout=30)
+                except asyncio.TimeoutError:
+                    raise RuntimeError(
+                        f"No authenticated request to {self.api_host_substring} "
+                        f"appeared after loading {self.trigger_url} — the saved "
+                        f"session in {self.auth_file} has likely expired. "
+                        "Run `uv run python scripts/setup_login.py` to log in again."
+                    ) from None
 
                 # Persist freshened cookies/localStorage so the next mint
                 # uses the latest MSAL refresh state.
@@ -106,3 +128,46 @@ class WegmansAuth:
                 return CachedToken(jwt=jwt, expires_at=_decode_exp(jwt))
             finally:
                 await browser.close()
+
+
+class FallbackAuth:
+    """Try each auth in order; skip ones that have failed this session.
+
+    Exists because the wegmans.com (shop) token is accepted by the Meals2Go
+    backend too — so when auth.json has expired but auth-shop.json is alive,
+    Meals2Go tools can keep working on the shop token instead of failing.
+    A failed mint costs a ~30s browser timeout, so failures are remembered
+    and that source isn't retried for the rest of the session.
+    """
+
+    def __init__(self, *chain: WegmansAuth):
+        self.chain = list(chain)
+        self._dead: set[int] = set()
+
+    async def get_token(self) -> str:
+        last_err: Exception | None = None
+        for i, auth in enumerate(self.chain):
+            if i in self._dead:
+                continue
+            try:
+                return await auth.get_token()
+            except RuntimeError as e:
+                self._dead.add(i)
+                last_err = e
+        raise last_err or RuntimeError(
+            "No usable Wegmans auth. Run `uv run python scripts/setup_login.py`."
+        )
+
+
+def shop_auth(auth_file: Path = SHOP_AUTH_FILE) -> WegmansAuth:
+    """Auth against the wegmans.com grocery site (commerce backend).
+
+    Same silent-renewal strategy as Meals2Go, but the grocery MSAL client
+    requests `offline_access`, so its cache holds a refresh token and renewal
+    keeps working long after the 1-hour access token dies.
+    """
+    return WegmansAuth(
+        auth_file=auth_file,
+        trigger_url=SHOP_TRIGGER_URL,
+        api_host_substring=SHOP_API_HOST_SUBSTRING,
+    )

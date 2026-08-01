@@ -1,0 +1,23 @@
+{
+  "_endpoint": "PUT https://api.digitaldevelopment.wegmans.cloud/commerce/cart/carts/itemdeletion?api-version=2024-02-19-preview",
+  "body": {
+    "cartData": [
+      {
+        "cartID": "<CART_ID>",
+        "cartVersion": 71,
+        "custom": [
+          {
+            "name": "orderLevelAdjustments",
+            "value": "[]"
+          }
+        ],
+        "isAlcoholic": false,
+        "lineItems": [
+          {
+            "sku": "92685"
+          }
+        ]
+      }
+    ]
+  }
+}

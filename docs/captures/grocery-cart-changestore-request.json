@@ -1,0 +1,29 @@
+{
+  "_endpoint": "PUT https://api.digitaldevelopment.wegmans.cloud/commerce/cart/carts/changestore?api-version=2024-02-19-preview",
+  "_note": "customerId is lowercase-d here but customerID (capital) on the lineitems add \u2014 verbatim from the SPA.",
+  "body": {
+    "cartData": [
+      {
+        "cartID": "<CART_ID>",
+        "cartVersion": 90,
+        "custom": [
+          {
+            "name": "storeNumber",
+            "value": "91"
+          },
+          {
+            "name": "fulfillmentType",
+            "value": "pickup"
+          }
+        ],
+        "isAlcoholic": false,
+        "lineItems": [],
+        "customLineItems": []
+      }
+    ],
+    "customerEmail": "<EMAIL>",
+    "customerId": "<COMMERCE_CUSTOMER_ID>",
+    "storeChanged": true,
+    "storeKey": "91-AMHERST-ST"
+  }
+}

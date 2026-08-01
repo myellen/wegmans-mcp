@@ -23,6 +23,7 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 AUTH_FILE = Path("auth.json")
+SHOP_AUTH_FILE = Path("auth-shop.json")
 ENV_FILE = Path(".env")
 LOGIN_URL = "https://www.meals2go.com/"
 SHOP_URL = "https://www.wegmans.com/"
@@ -103,17 +104,18 @@ async def main() -> int:
         # session. Without this the saved state can order prepared food but
         # not groceries.
         print("Signing in to the grocery site (wegmans.com) ...")
+        shop_ok = False
         try:
             await page.goto(SHOP_URL, wait_until="domcontentloaded")
             for _ in range(40):
                 await asyncio.sleep(0.5)
-                signed_in = await page.evaluate(
+                shop_ok = await page.evaluate(
                     """() => Object.keys(window.localStorage)
                              .some(k => k.includes('login.windows')
                                      || k.includes('msal')
                                      || k.includes('accesstoken'))"""
                 )
-                if signed_in:
+                if shop_ok:
                     break
             else:
                 print(
@@ -126,7 +128,16 @@ async def main() -> int:
 
         state = await context.storage_state()
         AUTH_FILE.write_text(json.dumps(state, indent=2))
-        print(f"Auth saved to {AUTH_FILE}.")
+        saved = [str(AUTH_FILE)]
+        if shop_ok:
+            # Only overwrite the shop session when the warm-up actually
+            # signed in — a failed warm-up must not clobber a working
+            # auth-shop.json from a previous run.
+            SHOP_AUTH_FILE.write_text(json.dumps(state, indent=2))
+            saved.append(str(SHOP_AUTH_FILE))
+        elif SHOP_AUTH_FILE.exists():
+            print(f"Kept existing {SHOP_AUTH_FILE} untouched.", file=sys.stderr)
+        print(f"Auth saved to {' and '.join(saved)}.")
 
         if "loyalty_id" in loyalty_id:
             _write_env_var(ENV_FILE, "WEGMANS_LOYALTY_ID", loyalty_id["loyalty_id"])
