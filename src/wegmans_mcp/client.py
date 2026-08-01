@@ -105,6 +105,22 @@ class WegmansClient:
         self._http = httpx.AsyncClient(base_url=WEGAPI_BASE, timeout=30)
         self._commerce_customer: dict[str, Any] | None = None
         self._store_keys: dict[int, str] | None = None
+        self._assistant: Any | None = None
+
+    WEGMANS_CLOUD_BASE = WEGMANS_CLOUD_BASE
+
+    @property
+    def assistant(self):
+        """Lazily-built conversation with the wegmans.com AI assistant.
+        Kept on the client so follow-up turns stay in the same session."""
+        if self._assistant is None:
+            from .assistant import WegmansAssistant
+
+            self._assistant = WegmansAssistant(self)
+        return self._assistant
+
+    def reset_assistant(self) -> None:
+        self._assistant = None
 
     async def aclose(self) -> None:
         await self._http.aclose()
@@ -680,6 +696,55 @@ class WegmansClient:
         if not cart:
             raise RuntimeError("cart mutation returned no cart body")
         return cart
+
+    # ---- Personalized shopping surfaces (the wegmans.com home page) -------
+
+    async def list_my_items(self, limit: int = 25) -> list[dict[str, Any]]:
+        """The customer's "My Items" — what they actually buy, ranked by the
+        same signal the site's home page uses. Returns item numbers plus
+        purchase recency; call `get_products_by_sku` to price them.
+        """
+        self._require_shop_auth()
+        r = await self._cloud_request(
+            "GET", "/commerce/my-items", params={"api-version": "2024-01-26"},
+        )
+        items = r.json() or []
+        items.sort(key=lambda i: i.get("rank") or 10**9)
+        return items[:limit]
+
+    async def get_products_by_sku(self, sku_ids: list[str]) -> list[dict[str, Any]]:
+        """Batch product lookup on the commerce backend. Same product shape
+        as the Algolia catalog, but keyed by SKU — the right call when you
+        already know what you want (My Items, a saved list, a past order).
+        """
+        if not sku_ids:
+            return []
+        r = await self._cloud_request(
+            "GET", "/commerce/browse/products/",
+            params={
+                "productid": ",".join(str(s) for s in sku_ids),
+                "storeNumber": str(self.store_id),
+                "api-version": "2023-09-22",
+            },
+        )
+        return r.json() or []
+
+    async def list_saved_lists(self) -> list[dict[str, Any]]:
+        self._require_shop_auth()
+        r = await self._cloud_request(
+            "GET", "/commerce/saved-list/savedlists",
+            params={"api-version": "2024-02-20-preview"},
+        )
+        return r.json() or []
+
+    async def list_orders(self, active_only: bool = True) -> dict[str, Any]:
+        self._require_shop_auth()
+        path = ("/commerce/order/orders/activeorders" if active_only
+                else "/commerce/order/orders")
+        r = await self._cloud_request(
+            "GET", path, params={"api-version": "2024-03-04-preview"},
+        )
+        return r.json() or {}
 
     # ---- Locations -------------------------------------------------------
 

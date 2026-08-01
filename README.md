@@ -149,6 +149,12 @@ claude mcp add wegmans --scope user \
 - `list_coupons` — list digital coupons with clipped status. Two sources: `"shop"` (default — the main wegmans.com Shoppers Club coupons, 100+) and `"meals2go"` (smaller set tied to Meals2Go orders, requires `WEGMANS_LOYALTY_ID`)
 - `clip_coupons` — clip specific offers or all unclipped at once. Same `source` parameter as `list_coupons`
 
+**Personalized (what you actually buy):**
+- `list_my_items` — your "My Items", ranked like the wegmans.com home page, with current prices
+- `list_saved_lists` — your saved shopping lists
+- `list_orders` — status of an in-progress pickup/delivery, or order history
+- `ask_wegmans_assistant` — chat with Wegmans' own AI Assistant (Cooklist), which knows your purchase history, store, and cart
+
 **Setup (Claude Desktop):**
 - `setup_wegmans_login` — open the sign-in browser window from inside a chat (no terminal needed)
 - `check_login_status` — see whether sign-in finished and sessions exist

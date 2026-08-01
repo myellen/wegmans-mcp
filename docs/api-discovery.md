@@ -344,6 +344,48 @@ Other authenticated commerce endpoints observed:
 - `POST /commerce/signalr/orders/negotiate?api-version=2024-03-18-preview`
 - `POST /cooklist/v2/graphql` — recipes/cooking content
 
+## AI Assistant (Cooklist) — captured 2026-08-01
+
+The "AI Assistant" button on wegmans.com is Cooklist. Two channels, and
+the split is the non-obvious part:
+
+| Step | Call | Auth |
+|---|---|---|
+| Get chat token | `GET /commerce/recipes/customer/cooklist-auth-token?api-version=2025-09-18-preview` | shop Bearer |
+| Send a turn | `POST /cooklist/graphql` — `CreateStreamingChatMessage` | **none** |
+| Receive reply | `wss://api.digitaldevelopment.wegmans.cloud/websockets/prod/cooklist-shopper-assistant` | Cooklist Bearer |
+
+- The **send mutation carries no Authorization header at all**; the caller
+  is identified by `userId` in the variables, formatted
+  `wgcl_<customer.key>` (that key is the JWT's `extension_Customer_ID`).
+- The socket speaks `graphql-transport-ws`: `connection_init` with
+  `{"headers": {"Authorization": "Bearer <cooklist token>"}}`, await
+  `connection_ack`, then `subscribe` with the `OnLLMToken` subscription
+  keyed on `userId` + `sessionId` + the `responseId` the mutation returned.
+- Frames wrap a JSON *string* in `llmSubscription.response`:
+  `{"type": "token", "data": "..."}` chunks, optionally
+  `{"type": "processed_block", "processor": "suggested_responses"}`, then
+  `{"type": "done"}`. Connect and ack **before** posting the mutation —
+  streaming starts immediately and a late subscriber misses the opening.
+- The web UI gates first use behind a beta consent, recorded via the
+  `UpdateOnboardingStep` mutation with `onboardingStep: "AI_AGENT_CONSENT"`.
+- `shoppingCartState` (store, fulfillment, cart id) is passed with every
+  turn — that's how the assistant grounds answers in the real cart.
+
+## Personalized surfaces (the wegmans.com home page)
+
+| Path | Returns |
+|---|---|
+| `GET /commerce/my-items?api-version=2024-01-26` | 540 item numbers with `rank` + `lastPurchasedDate` — the "My Items" ordering the home page uses. IDs only; no prices. |
+| `GET /commerce/browse/products/?productid=a,b,c&storeNumber=91&api-version=2023-09-22` | Batch product detail by SKU, same shape as the Algolia hit. **Only returns SKUs the store carries**, so a missing entry means "not available here", not an error. |
+| `GET /commerce/saved-list/savedlists?api-version=2024-02-20-preview` | Named saved lists with `lineItems` + free-text `textLineItems` |
+| `GET /commerce/order/orders/activeorders?api-version=2024-03-04-preview` | Orders. Its `count` field counts *in-progress* orders and can be 0 while recently-completed orders are still in `orders`. |
+
+The rest of the home page (hero blocks, "Scoop into delicious", seasonal
+banners) is Contentstack CMS + Adobe AJO personalization served from
+`/api/content/*`. It's marketing copy, not shoppable data — deliberately
+not wrapped in tools.
+
 ## Constants observed in this session
 
 | Name | Value |
