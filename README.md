@@ -13,7 +13,7 @@ Let Claude run your Wegmans Meals2Go cart. Ask Claude things like:
 > "Here's my Whole Foods list — build it as a Wegmans pickup cart."
 
 Claude (in Claude Code, Claude Desktop, or any MCP-compatible client) gets
-19 tools for browsing the menu, finding stores, configuring fulfillment,
+tools for browsing the menu, finding stores, configuring fulfillment,
 managing cart items, naming them ("for Dad", "for Akanksha"), clipping
 Shoppers Club coupons, searching the grocery catalog, and building a
 grocery cart. It does **not** place the final order — you still hit
@@ -28,6 +28,26 @@ manage the wegmans.com cart (`view_grocery_cart`, `add_grocery_to_cart`,
 wegmans.com login from setup). The grocery cart doubles as the in-store
 "My List" on wegmans.com and the app, so a converted shopping list shows
 up on your phone, sorted by aisle, when you walk into the store.
+
+## Easiest install: Claude Desktop bundle
+
+If you use the **Claude Desktop app**, grab `wegmans-mcp.mcpb` from the
+[latest release](https://github.com/myellen/wegmans-mcp/releases) and
+open it (double-click, or drag onto Claude Desktop → Settings →
+Extensions). Claude Desktop installs the server and manages Python
+dependencies itself.
+
+Then just tell Claude:
+
+> "Set up my Wegmans login."
+
+A browser window opens — sign in with your Wegmans account and you're
+done. Your session is saved to `~/.wegmans-mcp/` on your machine and
+nowhere else. Finally, tell Claude your store:
+
+> "Find my Wegmans near \<your city or zip\> and make it my store."
+
+Everything below is the manual path for Claude Code / other MCP clients.
 
 ## Setup (one-time, ~5 minutes)
 
@@ -122,6 +142,10 @@ claude mcp add wegmans --scope user \
 **Digital coupons:**
 - `list_coupons` — list digital coupons with clipped status. Two sources: `"shop"` (default — the main wegmans.com Shoppers Club coupons, 100+) and `"meals2go"` (smaller set tied to Meals2Go orders, requires `WEGMANS_LOYALTY_ID`)
 - `clip_coupons` — clip specific offers or all unclipped at once. Same `source` parameter as `list_coupons`
+
+**Setup (Claude Desktop):**
+- `setup_wegmans_login` — open the sign-in browser window from inside a chat (no terminal needed)
+- `check_login_status` — see whether sign-in finished and sessions exist
 
 **Groceries (wegmans.com):**
 - `search_groceries` — search the supermarket catalog: prices per channel, pack sizes, aisles, dietary tags (works with no login)

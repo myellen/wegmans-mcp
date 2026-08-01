@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -17,8 +18,21 @@ from .client import GROCERY_PRICE_FIELDS, WegmansClient
 
 # Load .env from the current working directory if present. setup_login.py
 # writes the auto-discovered loyalty number there so the user doesn't have
-# to set WEGMANS_LOYALTY_ID by hand.
+# to set WEGMANS_LOYALTY_ID by hand. When auth lives in a dedicated
+# directory (the Claude Desktop bundle sets WEGMANS_AUTH_FILE to
+# ~/.wegmans-mcp/auth.json), the in-chat login writes .env next to it —
+# load that one too.
+# The Desktop bundle manifest injects user_config values as env vars even
+# when the user left them blank. python-dotenv never fills a key that
+# already exists — even as "" — so blank placeholders would permanently
+# shadow the loyalty number the login saves to .env. Treat empty as unset.
+for _k in ("WEGMANS_LOYALTY_ID", "WEGMANS_STORE_ID"):
+    if os.environ.get(_k) == "":
+        del os.environ[_k]
+
 load_dotenv()
+if os.environ.get("WEGMANS_AUTH_FILE"):
+    load_dotenv(Path(os.environ["WEGMANS_AUTH_FILE"]).parent / ".env")
 
 mcp = FastMCP("wegmans-mcp")
 
@@ -26,11 +40,16 @@ _auth: WegmansAuth | None = None
 _client: WegmansClient | None = None
 
 
+def _auth_paths() -> tuple[Path, Path]:
+    auth_path = Path(os.environ.get("WEGMANS_AUTH_FILE", "auth.json"))
+    shop_path = Path(os.environ.get("WEGMANS_SHOP_AUTH_FILE", str(SHOP_AUTH_FILE)))
+    return auth_path, shop_path
+
+
 def _get_client() -> WegmansClient:
     global _auth, _client
     if _client is None:
-        auth_path = Path(os.environ.get("WEGMANS_AUTH_FILE", "auth.json"))
-        shop_auth_path = Path(os.environ.get("WEGMANS_SHOP_AUTH_FILE", str(SHOP_AUTH_FILE)))
+        auth_path, shop_auth_path = _auth_paths()
         store_id_env = os.environ.get("WEGMANS_STORE_ID")
 
         shop = shop_auth(shop_auth_path) if shop_auth_path.exists() else None
@@ -809,6 +828,131 @@ async def remove_grocery_from_cart(
     client = _get_client()
     cart = await client.remove_grocery_from_cart(sku_id)
     return _summarize_grocery_cart(cart)
+
+
+# ---- In-chat login (for Claude Desktop, where there is no terminal) ------
+
+_login_task: asyncio.Task | None = None
+_login_status: dict[str, Any] = {"state": "idle", "detail": None}
+
+
+async def _run_login_background() -> None:
+    global _client, _auth
+    from .login import run_login
+
+    auth_path, shop_path = _auth_paths()
+
+    def on_status(state: str, detail: str) -> None:
+        _login_status.update({"state": state, "detail": detail})
+
+    try:
+        result = await run_login(
+            auth_file=auth_path,
+            shop_auth_file=shop_path,
+            env_file=auth_path.parent / ".env",
+            on_status=on_status,
+        )
+        # Pick up the fresh session and the auto-detected loyalty number:
+        # drop the cached client (it may hold auth sources marked dead) and
+        # re-read the .env the login just wrote. No override — a loyalty
+        # number the user explicitly configured still wins (blank
+        # placeholders were already stripped at startup).
+        prev = _client
+        _client = None
+        _auth = None
+        if prev is not None:
+            try:
+                await prev.aclose()
+            except Exception:
+                pass
+        load_dotenv(auth_path.parent / ".env")
+        if prev is not None:
+            # Keep the store/fulfillment the user had set this session —
+            # a re-login must not silently bounce them back to defaults.
+            _get_client().set_fulfillment(prev.store_id, prev.fulfillment_type)
+        _login_status.update({
+            "state": "done",
+            "detail": None,
+            "shop_ok": result.get("shop_ok"),
+            "loyalty_id": result.get("loyalty_id"),
+            "saved": result.get("saved"),
+        })
+    except Exception as e:
+        _login_status.update({"state": "failed", "detail": str(e)})
+
+
+@mcp.tool()
+async def setup_wegmans_login(
+    restart: Annotated[
+        bool,
+        Field(description="Cancel a login already in progress and start over "
+                          "(use when the user closed the window or wants to retry)"),
+    ] = False,
+) -> dict[str, Any]:
+    """Open a Wegmans sign-in window on this computer (one-time setup, or
+    when the saved session has expired). A real browser window appears;
+    the user signs in with their own Wegmans account; the session is then
+    saved locally so every other tool works. Check progress with
+    `check_login_status`. Takes up to a couple of minutes; the first run
+    may also download a browser.
+    """
+    global _login_task
+
+    if _login_task is not None and not _login_task.done():
+        if not restart:
+            return {
+                "status": "already_running",
+                **_login_status,
+                "next": "Ask the user to finish signing in, then call "
+                        "check_login_status. Pass restart=true to abandon "
+                        "the current attempt and open a fresh window.",
+            }
+        _login_task.cancel()
+        try:
+            await _login_task
+        except (asyncio.CancelledError, Exception):
+            pass
+    _login_status.clear()
+    _login_status.update({"state": "starting", "detail": None})
+    _login_task = asyncio.create_task(_run_login_background())
+    return {
+        "status": "started",
+        "instructions": (
+            "A browser window is opening on the user's computer. Tell them to "
+            "click 'Sign In' (top right of meals2go.com) and log in with their "
+            "Wegmans account, then come back here. Poll check_login_status to "
+            "see when it finishes."
+        ),
+    }
+
+
+@mcp.tool()
+async def check_login_status() -> dict[str, Any]:
+    """Check the state of a sign-in started by `setup_wegmans_login`, and
+    whether saved Wegmans sessions exist on disk at all."""
+    auth_path, shop_path = _auth_paths()
+    out = dict(_login_status)
+    out["auth_file_exists"] = auth_path.exists()
+    out["shop_auth_file_exists"] = shop_path.exists()
+    if out.get("state") == "done":
+        if out.get("shop_ok"):
+            out["next"] = (
+                "Login complete — all tools are ready. If the user hasn't set "
+                "a home store yet, offer to find their store (search_stores) "
+                "and set it (set_fulfillment)."
+            )
+        else:
+            out["next"] = (
+                "Meals2Go login complete — catalog search and prepared-food "
+                "ordering are ready, but the grocery-site sign-in didn't "
+                "finish, so grocery cart tools may not work"
+                + (" (an older saved grocery session exists and may still "
+                   "work)" if out["shop_auth_file_exists"] else "")
+                + ". Run setup_wegmans_login again to retry."
+            )
+    elif out.get("state") == "failed" and not out.get("auth_file_exists"):
+        out["next"] = "Run setup_wegmans_login again to retry."
+    return out
 
 
 def main() -> None:

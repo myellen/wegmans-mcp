@@ -88,7 +88,8 @@ class WegmansAuth:
         if not self.auth_file.exists():
             raise RuntimeError(
                 f"Auth file {self.auth_file} missing. "
-                "Run `uv run python scripts/setup_login.py` to log in."
+                "Run the `setup_wegmans_login` tool to sign in (or, from a "
+                "repo checkout, `uv run python scripts/setup_login.py`)."
             )
         async with async_playwright() as pw:
             browser = await pw.chromium.launch(headless=True)
@@ -117,12 +118,15 @@ class WegmansAuth:
                         f"No authenticated request to {self.api_host_substring} "
                         f"appeared after loading {self.trigger_url} — the saved "
                         f"session in {self.auth_file} has likely expired. "
-                        "Run `uv run python scripts/setup_login.py` to log in again."
+                        "Run the `setup_wegmans_login` tool to sign in again "
+                        "(or, from a repo checkout, "
+                        "`uv run python scripts/setup_login.py`)."
                     ) from None
 
                 # Persist freshened cookies/localStorage so the next mint
                 # uses the latest MSAL refresh state.
                 state = await context.storage_state()
+                self.auth_file.parent.mkdir(parents=True, exist_ok=True)
                 self.auth_file.write_text(json.dumps(state, indent=2))
 
                 return CachedToken(jwt=jwt, expires_at=_decode_exp(jwt))
@@ -155,7 +159,9 @@ class FallbackAuth:
                 self._dead.add(i)
                 last_err = e
         raise last_err or RuntimeError(
-            "No usable Wegmans auth. Run `uv run python scripts/setup_login.py`."
+            "No usable Wegmans auth. Run the `setup_wegmans_login` tool to "
+            "sign in (or, from a repo checkout, "
+            "`uv run python scripts/setup_login.py`)."
         )
 
 

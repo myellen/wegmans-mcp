@@ -1,0 +1,194 @@
+"""Interactive Wegmans login flow.
+
+Shared by `scripts/setup_login.py` (terminal) and the `setup_wegmans_login`
+MCP tool (Claude Desktop, where there is no terminal). Opens a real headed
+browser window; the user signs in; the session state is saved for the
+silent-renewal minting in auth.py.
+
+If the Playwright Chromium build is missing (fresh install from the .mcpb
+bundle), it is downloaded automatically before the window opens.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import re
+import json
+import sys
+from pathlib import Path
+from typing import Any, Callable
+
+from playwright.async_api import Error as PlaywrightError, async_playwright
+
+from .auth import API_HOST_SUBSTRING, _is_b2c_token
+
+LOGIN_URL = "https://www.meals2go.com/"
+SHOP_URL = "https://www.wegmans.com/"
+LOYALTY_URL_RE = re.compile(r"/loyalty/(\d+)")
+
+StatusFn = Callable[[str, str], None]
+
+
+def _noop_status(state: str, detail: str) -> None:  # pragma: no cover
+    pass
+
+
+def write_env_var(path: Path, key: str, value: str) -> None:
+    """Upsert KEY=VALUE in a simple .env file."""
+    lines = path.read_text().splitlines() if path.exists() else []
+    out, replaced = [], False
+    for line in lines:
+        if line.startswith(f"{key}="):
+            out.append(f"{key}={value}")
+            replaced = True
+        else:
+            out.append(line)
+    if not replaced:
+        out.append(f"{key}={value}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(out) + "\n")
+
+
+async def _install_chromium() -> None:
+    proc = await asyncio.create_subprocess_exec(
+        sys.executable, "-m", "playwright", "install", "chromium",
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL,
+    )
+    rc = await proc.wait()
+    if rc != 0:
+        raise RuntimeError(f"playwright install chromium exited with {rc}")
+
+
+async def run_login(
+    auth_file: Path,
+    shop_auth_file: Path,
+    env_file: Path | None = None,
+    on_status: StatusFn = _noop_status,
+    signin_timeout: int = 600,
+) -> dict[str, Any]:
+    """Run the full interactive login. Returns a summary dict:
+
+    {ok, shop_ok, loyalty_id, saved: [paths]}
+
+    Raises on hard failures (browser can't start, user never signed in).
+    """
+    auth_file.parent.mkdir(parents=True, exist_ok=True)
+    shop_auth_file.parent.mkdir(parents=True, exist_ok=True)
+
+    async with async_playwright() as pw:
+        try:
+            browser = await pw.chromium.launch(headless=False)
+        except PlaywrightError as e:
+            if "Executable doesn't exist" not in str(e):
+                raise
+            on_status("installing_browser",
+                      "Downloading Chromium (one-time, ~2 minutes)...")
+            await _install_chromium()
+            browser = await pw.chromium.launch(headless=False)
+
+        try:
+            context = await browser.new_context()
+            page = await context.new_page()
+
+            token_ready = asyncio.Event()
+            closed = asyncio.Event()
+            loyalty: dict[str, str] = {}
+
+            # Fail fast if the user closes the window instead of waiting the
+            # full sign-in timeout with no way to retry.
+            browser.on("disconnected", lambda _b: closed.set())
+            page.on("close", lambda _p: closed.set())
+
+            def on_request(req):
+                if API_HOST_SUBSTRING not in req.url:
+                    return
+                if not token_ready.is_set():
+                    auth = req.headers.get("authorization")
+                    if auth and auth.lower().startswith("bearer "):
+                        if _is_b2c_token(auth.split(" ", 1)[1]):
+                            token_ready.set()
+                if "id" not in loyalty:
+                    m = LOYALTY_URL_RE.search(req.url)
+                    if m:
+                        loyalty["id"] = m.group(1)
+
+            page.on("request", on_request)
+            await page.goto(LOGIN_URL)
+            on_status("waiting_for_signin",
+                      "Browser window open — click Sign In on meals2go.com "
+                      "and log in to your Wegmans account.")
+
+            waiters = [
+                asyncio.create_task(token_ready.wait()),
+                asyncio.create_task(closed.wait()),
+            ]
+            try:
+                done, _ = await asyncio.wait(
+                    waiters, timeout=signin_timeout,
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+            finally:
+                for w in waiters:
+                    w.cancel()
+            if not token_ready.is_set():
+                if closed.is_set():
+                    raise RuntimeError(
+                        "The sign-in window was closed before login "
+                        "completed. Run the login again to retry."
+                    )
+                raise RuntimeError(
+                    f"No sign-in detected after {signin_timeout // 60} minutes; "
+                    "closing the browser. Run the login again to retry."
+                )
+
+            # Give the home page a moment to fire the digital-coupons request
+            # that carries the loyalty number.
+            for _ in range(30):
+                if "id" in loyalty:
+                    break
+                await asyncio.sleep(0.5)
+
+            state = await context.storage_state()
+            auth_file.write_text(json.dumps(state, indent=2))
+
+            # Warm the grocery site so its (separate) MSAL client signs in
+            # off the same B2C session; only then is auth-shop.json valid.
+            on_status("warming_shop", "Signing in to the grocery site (wegmans.com)...")
+            shop_ok = False
+            try:
+                await page.goto(SHOP_URL, wait_until="domcontentloaded")
+                for _ in range(40):
+                    await asyncio.sleep(0.5)
+                    shop_ok = await page.evaluate(
+                        """() => Object.keys(window.localStorage)
+                                 .some(k => k.includes('login.windows')
+                                         || k.includes('msal')
+                                         || k.includes('accesstoken'))"""
+                    )
+                    if shop_ok:
+                        break
+            except Exception:
+                shop_ok = False
+
+            state = await context.storage_state()
+            auth_file.write_text(json.dumps(state, indent=2))
+            saved = [str(auth_file)]
+            if shop_ok:
+                # A failed warm-up must not clobber a working auth-shop.json
+                # from a previous run.
+                shop_auth_file.write_text(json.dumps(state, indent=2))
+                saved.append(str(shop_auth_file))
+
+            if env_file is not None and "id" in loyalty:
+                write_env_var(env_file, "WEGMANS_LOYALTY_ID", loyalty["id"])
+                saved.append(str(env_file))
+
+            return {
+                "ok": True,
+                "shop_ok": shop_ok,
+                "loyalty_id": loyalty.get("id"),
+                "saved": saved,
+            }
+        finally:
+            await browser.close()

@@ -12,9 +12,20 @@ Tools, auth, and API quirks are documented in `docs/api-discovery.md`.
 - `src/wegmans_mcp/client.py` — async httpx client wrapping the
   `wegapi.azure-api.net` API surface (cart, kitting, locations, coupons,
   Google maps proxy). Holds the mutable `store_id` / `fulfillment_type`.
-- `src/wegmans_mcp/server.py` — FastMCP server exposing 19 tools. Uses
+- `src/wegmans_mcp/server.py` — FastMCP server exposing the MCP tools. Uses
   a module-level singleton `_client` so state (store, fulfillment)
   persists across tool calls in a single MCP session.
+- `src/wegmans_mcp/login.py` — the interactive (headed-browser) login
+  flow, shared by `scripts/setup_login.py` and the `setup_wegmans_login`
+  MCP tool. Auto-installs Chromium if missing.
+- `manifest.json` + `.mcpbignore` — Claude Desktop bundle (MCPB, uv
+  server type). Build with `mcpb pack . dist/wegmans-mcp.mcpb`, then
+  publish it as a GitHub release asset
+  (`gh release create vX.Y.Z dist/wegmans-mcp.mcpb`) — the README's
+  install link points at Releases, so a bundle change isn't shipped
+  until a release carries it. The bundle stores auth under
+  `~/.wegmans-mcp/` (set via env in the manifest) so sessions survive
+  extension updates.
 
 ## Working with the cart API
 

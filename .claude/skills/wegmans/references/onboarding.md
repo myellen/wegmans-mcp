@@ -4,6 +4,16 @@ Walk the user through these steps in order. Don't run anything that
 requires interaction (the browser login) silently — make sure they're
 watching.
 
+## Shortcut: Claude Desktop bundle
+
+If the user is in the **Claude Desktop app**, skip the manual steps:
+have them download `wegmans-mcp.mcpb` from the repo's GitHub releases
+and open it (Settings → Extensions). Once installed, the login happens
+in-chat: call `setup_wegmans_login`, tell the user to sign in when the
+browser window appears, and poll `check_login_status` until it reports
+done. Then jump to step 5 (set their home store). The manual path below
+is for Claude Code / other MCP clients.
+
 ## 1. Prerequisites
 
 Check that the user has these. If not, point them at the install links

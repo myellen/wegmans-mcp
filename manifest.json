@@ -1,0 +1,56 @@
+{
+  "manifest_version": "0.4",
+  "name": "wegmans-mcp",
+  "display_name": "Wegmans",
+  "version": "0.2.0",
+  "description": "Search Wegmans groceries, build your cart and shopping list, order Meals2Go prepared food, and clip digital coupons.",
+  "long_description": "Gives Claude tools for your Wegmans account: search the grocery catalog (prices, aisles, nutrition — works without login), build the wegmans.com grocery cart (which doubles as your in-store My List, aisle-sorted in the Wegmans app), order Meals2Go prepared food (subs, pizza, bowls), find stores, switch pickup/delivery, and clip Shoppers Club coupons. First use: just ask Claude to set up your Wegmans login — a browser window opens and you sign in with your own account. Sessions are stored only on this computer (~/.wegmans-mcp). Claude never places the final order; you always hit Checkout yourself.",
+  "author": {
+    "name": "Max Yellen",
+    "url": "https://github.com/myellen"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/myellen/wegmans-mcp"
+  },
+  "homepage": "https://github.com/myellen/wegmans-mcp",
+  "license": "MIT",
+  "keywords": ["wegmans", "groceries", "shopping", "meals2go", "coupons"],
+  "server": {
+    "type": "uv",
+    "entry_point": "src/wegmans_mcp/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "wegmans-mcp"],
+      "env": {
+        "WEGMANS_AUTH_FILE": "${HOME}/.wegmans-mcp/auth.json",
+        "WEGMANS_SHOP_AUTH_FILE": "${HOME}/.wegmans-mcp/auth-shop.json",
+        "WEGMANS_STORE_ID": "${user_config.store_id}",
+        "WEGMANS_LOYALTY_ID": "${user_config.loyalty_id}"
+      }
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  },
+  "user_config": {
+    "store_id": {
+      "type": "string",
+      "title": "Home store number",
+      "description": "Your default Wegmans store number (optional — you can also just ask Claude to find and set your store). Leave empty if unsure.",
+      "required": false,
+      "default": ""
+    },
+    "loyalty_id": {
+      "type": "string",
+      "title": "Shoppers Club number",
+      "description": "Optional — auto-detected during login. Only set manually if coupon tools ask for it.",
+      "sensitive": true,
+      "required": false,
+      "default": ""
+    }
+  }
+}
