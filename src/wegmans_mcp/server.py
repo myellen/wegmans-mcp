@@ -14,7 +14,7 @@ from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
 from .auth import SHOP_AUTH_FILE, FallbackAuth, WegmansAuth, shop_auth
-from .client import GROCERY_PRICE_FIELDS, WegmansClient
+from .client import GROCERY_PRICE_FIELDS, WegmansClient, normalize_fulfillment
 
 # Load .env from the current working directory if present. setup_login.py
 # writes the auto-discovered loyalty number there so the user doesn't have
@@ -26,7 +26,7 @@ from .client import GROCERY_PRICE_FIELDS, WegmansClient
 # when the user left them blank. python-dotenv never fills a key that
 # already exists — even as "" — so blank placeholders would permanently
 # shadow the loyalty number the login saves to .env. Treat empty as unset.
-for _k in ("WEGMANS_LOYALTY_ID", "WEGMANS_STORE_ID"):
+for _k in ("WEGMANS_LOYALTY_ID", "WEGMANS_STORE_ID", "WEGMANS_FULFILLMENT_TYPE"):
     if os.environ.get(_k) == "":
         del os.environ[_k]
 
@@ -34,7 +34,42 @@ load_dotenv()
 if os.environ.get("WEGMANS_AUTH_FILE"):
     load_dotenv(Path(os.environ["WEGMANS_AUTH_FILE"]).parent / ".env")
 
-mcp = FastMCP("wegmans-mcp")
+mcp = FastMCP(
+    "wegmans-mcp",
+    # Sent to the client on connect. Without it, a fresh Claude session has
+    # to infer all of this — and reliably gets the two carts and the login
+    # story wrong on the first try.
+    instructions=(
+        "Wegmans tools. This server runs LOCALLY on the user's own machine "
+        "and drives their real Wegmans account.\n\n"
+        "TWO SEPARATE CARTS — they are different systems and check out "
+        "separately:\n"
+        "  * Groceries (wegmans.com): search_groceries / get_grocery_product "
+        "to find items; view_grocery_cart / add_grocery_to_cart / "
+        "update_grocery_cart_item / remove_grocery_from_cart to manage the "
+        "cart. When fulfillment is in-store this cart IS the user's 'My "
+        "List' in the Wegmans app, sorted by aisle.\n"
+        "  * Meals2Go (prepared food — subs, pizza, wings): "
+        "list_menu_categories / browse_category / get_item_details, then "
+        "add_to_cart / view_cart. Always call get_item_details before "
+        "add_to_cart; menu items are deeply nested kits.\n\n"
+        "AUTH: only the grocery *catalog* (search_groceries, "
+        "get_grocery_product) works without login; everything else needs a "
+        "saved session. If a tool reports an expired or missing session, "
+        "call setup_wegmans_login — it opens a browser window on the user's "
+        "machine where THEY sign in (never ask for their password), then "
+        "poll check_login_status. Sessions expire every few weeks, so this "
+        "is normal maintenance, not a broken install.\n\n"
+        "NOTE: an empty Meals2Go cart always reports customer_id=null and an "
+        "all-zeros cart_id. That is how the API represents an empty cart — "
+        "it is NOT evidence of a failed login. Use check_login_status to "
+        "judge auth state.\n\n"
+        "Prices and availability are per store and per fulfillment type "
+        "(delivery runs ~15% above in-store). Confirm the store with "
+        "get_current_fulfillment before quoting totals. This server never "
+        "places an order — the user always checks out themselves."
+    ),
+)
 
 _auth: WegmansAuth | None = None
 _client: WegmansClient | None = None
@@ -68,6 +103,9 @@ def _get_client() -> WegmansClient:
         kwargs: dict = {"shop_auth": shop}
         if store_id_env:
             kwargs["store_id"] = int(store_id_env)
+        fulfillment_env = os.environ.get("WEGMANS_FULFILLMENT_TYPE")
+        if fulfillment_env:
+            kwargs["fulfillment_type"] = normalize_fulfillment(fulfillment_env)
         _client = WegmansClient(_auth, **kwargs)
     return _client
 
@@ -866,15 +904,26 @@ async def _run_login_background() -> None:
             except Exception:
                 pass
         load_dotenv(auth_path.parent / ".env")
-        if prev is not None:
-            # Keep the store/fulfillment the user had set this session —
-            # a re-login must not silently bounce them back to defaults.
+        if result.get("store_id"):
+            # The login read the user's real home store off their account —
+            # that beats both the built-in default and whatever this session
+            # happened to be pointing at.
+            _get_client().set_fulfillment(
+                result["store_id"],
+                result.get("fulfillment_type") or "store",
+            )
+        elif prev is not None:
+            # Nothing detected: keep the store/fulfillment the user had set
+            # this session rather than bouncing them back to defaults.
             _get_client().set_fulfillment(prev.store_id, prev.fulfillment_type)
         _login_status.update({
             "state": "done",
             "detail": None,
             "shop_ok": result.get("shop_ok"),
             "loyalty_id": result.get("loyalty_id"),
+            "store_id": result.get("store_id"),
+            "store_name": result.get("store_name"),
+            "fulfillment_type": result.get("fulfillment_type"),
             "saved": result.get("saved"),
         })
     except Exception as e:

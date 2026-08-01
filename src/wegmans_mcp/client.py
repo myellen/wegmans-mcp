@@ -60,7 +60,9 @@ DEFAULT_RADIUS = "standard"
 FULFILLMENT_TYPES: dict[str, str] = {
     "store": "store",         # in-store pickup
     "carryout": "store",      # alias used in UI
+    "instore": "store",       # alias used by wegmans.com
     "curbside": "curbside",
+    "pickup": "curbside",     # alias used by wegmans.com
     "delivery": "delivery",
 }
 

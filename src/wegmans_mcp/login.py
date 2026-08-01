@@ -49,6 +49,44 @@ def write_env_var(path: Path, key: str, value: str) -> None:
     path.write_text("\n".join(out) + "\n")
 
 
+def parse_shopping_context(raw: str | None) -> dict[str, Any]:
+    """Pull the home store / shopping method out of wegmans.com's
+    `shopping-context-storage` localStorage blob. Shape:
+    {"state": {"storeNumber": 91, "shoppingMethod": "instore",
+               "storeDetails": {"storeName": "Amherst St", ...}}}
+    """
+    if not raw:
+        return {}
+    try:
+        state = (json.loads(raw) or {}).get("state") or {}
+    except (ValueError, AttributeError):
+        return {}
+    out: dict[str, Any] = {}
+    store_number = state.get("storeNumber")
+    if isinstance(store_number, (int, str)) and str(store_number).isdigit():
+        out["store_id"] = int(store_number)
+    method = state.get("shoppingMethod") or state.get("shoppingMethodUI")
+    # wegmans.com names the channels instore/pickup/delivery; the cart API
+    # (and our tools) use store/curbside/delivery.
+    mapped = {"instore": "store", "pickup": "curbside", "delivery": "delivery"}
+    if method in mapped:
+        out["fulfillment_type"] = mapped[method]
+    name = (state.get("storeDetails") or {}).get("storeName")
+    if name:
+        out["store_name"] = name
+    return out
+
+
+async def _read_shopping_context(page) -> dict[str, Any]:
+    try:
+        raw = await page.evaluate(
+            "() => window.localStorage.getItem('shopping-context-storage')"
+        )
+    except Exception:
+        return {}
+    return parse_shopping_context(raw)
+
+
 async def _install_chromium() -> None:
     proc = await asyncio.create_subprocess_exec(
         sys.executable, "-m", "playwright", "install", "chromium",
@@ -171,6 +209,11 @@ async def run_login(
             except Exception:
                 shop_ok = False
 
+            # wegmans.com keeps the signed-in shopper's home store and
+            # shopping method in localStorage — read it so the user never has
+            # to look up a store number by hand.
+            store = await _read_shopping_context(page) if shop_ok else {}
+
             state = await context.storage_state()
             auth_file.write_text(json.dumps(state, indent=2))
             saved = [str(auth_file)]
@@ -180,14 +223,28 @@ async def run_login(
                 shop_auth_file.write_text(json.dumps(state, indent=2))
                 saved.append(str(shop_auth_file))
 
-            if env_file is not None and "id" in loyalty:
-                write_env_var(env_file, "WEGMANS_LOYALTY_ID", loyalty["id"])
-                saved.append(str(env_file))
+            if env_file is not None:
+                wrote_env = False
+                if "id" in loyalty:
+                    write_env_var(env_file, "WEGMANS_LOYALTY_ID", loyalty["id"])
+                    wrote_env = True
+                if store.get("store_id"):
+                    write_env_var(env_file, "WEGMANS_STORE_ID", str(store["store_id"]))
+                    wrote_env = True
+                if store.get("fulfillment_type"):
+                    write_env_var(env_file, "WEGMANS_FULFILLMENT_TYPE",
+                                  store["fulfillment_type"])
+                    wrote_env = True
+                if wrote_env:
+                    saved.append(str(env_file))
 
             return {
                 "ok": True,
                 "shop_ok": shop_ok,
                 "loyalty_id": loyalty.get("id"),
+                "store_id": store.get("store_id"),
+                "store_name": store.get("store_name"),
+                "fulfillment_type": store.get("fulfillment_type"),
                 "saved": saved,
             }
         finally:

@@ -43,9 +43,14 @@ Then just tell Claude:
 
 A browser window opens — sign in with your Wegmans account and you're
 done. Your session is saved to `~/.wegmans-mcp/` on your machine and
-nowhere else. Finally, tell Claude your store:
+nowhere else, and your home store comes straight off your account, so
+there is nothing else to configure.
 
-> "Find my Wegmans near \<your city or zip\> and make it my store."
+**Prerequisite:** this is a `uv`-type bundle. Claude Desktop ships
+Node.js but *not* Python, so `uv` must be on your PATH or the server
+won't start — `uv --version` to check,
+`curl -LsSf https://astral.sh/uv/install.sh | sh` to install (on
+Windows: `winget install astral-sh.uv`).
 
 Everything below is the manual path for Claude Code / other MCP clients.
 
@@ -72,6 +77,7 @@ The setup script opens a real Chromium window. Click **Sign In** (top right on m
 - Saves your Meals2Go session to `auth.json`.
 - **Auto-detects your Shoppers Club loyalty number** by sniffing the digital-coupons request the home page fires, and writes it to a `.env` file. The MCP server loads it on startup — you don't need to look up your loyalty number to use `list_coupons` / `clip_coupons`.
 - Loads wegmans.com (which signs in off the same account) and saves that session to `auth-shop.json` — needed by the grocery **cart** tools. Grocery *search* works with no login.
+- **Auto-detects your home store and shopping method** from your Wegmans account and writes them to `.env`, so you don't have to look up a store number.
 
 All three files are gitignored. Treat them like passwords — `auth.json` / `auth-shop.json` are the equivalent of being logged in on a browser.
 
@@ -108,7 +114,8 @@ Restart Claude Desktop.
 | Env var | Default | Purpose |
 |---|---|---|
 | `WEGMANS_AUTH_FILE` | `auth.json` (in the working dir) | Path to the saved login state |
-| `WEGMANS_STORE_ID` | `91` (Amherst St., Buffalo NY) | Default Meals2Go store number — you can override anytime via `set_fulfillment` |
+| `WEGMANS_STORE_ID` | auto-detected at login (falls back to `91`, Amherst St., Buffalo NY) | Default store number — override anytime via `set_fulfillment` |
+| `WEGMANS_FULFILLMENT_TYPE` | auto-detected at login (falls back to `store`) | Default fulfillment: `store` / `curbside` / `delivery` |
 | `WEGMANS_LOYALTY_ID` | auto-detected by `setup_login.py` and saved to `.env` | Your Shoppers Club number. Set this manually only if auto-detection fails or you want to override. |
 
 To pass env vars when adding to Claude Code:

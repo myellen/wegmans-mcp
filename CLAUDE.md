@@ -17,7 +17,13 @@ Tools, auth, and API quirks are documented in `docs/api-discovery.md`.
   persists across tool calls in a single MCP session.
 - `src/wegmans_mcp/login.py` — the interactive (headed-browser) login
   flow, shared by `scripts/setup_login.py` and the `setup_wegmans_login`
-  MCP tool. Auto-installs Chromium if missing.
+  MCP tool. Auto-installs Chromium if missing, and reads the user's home
+  store + shopping method out of wegmans.com's `shopping-context-storage`
+  localStorage blob into `.env` (`WEGMANS_STORE_ID` /
+  `WEGMANS_FULFILLMENT_TYPE`) so setup needs no store lookup.
+- `FastMCP(..., instructions=...)` in `server.py` is sent to the client on
+  connect. It exists because a fresh session otherwise mis-guesses the
+  two-cart split and the login story — keep it in sync with reality.
 - `manifest.json` + `.mcpbignore` — Claude Desktop bundle (MCPB, uv
   server type). Build with `mcpb pack . dist/wegmans-mcp.mcpb`, then
   publish it as a GitHub release asset
