@@ -1,0 +1,1697 @@
+{
+  "results": [
+    {
+      "hits": [
+        {
+          "price_inStore": {
+            "unitPrice": "$7.98/gallon",
+            "amount": 3.99,
+            "channelKey": "91-Instore"
+          },
+          "averageStarRating": 3.6667,
+          "isNewItem": false,
+          "filterTags": [
+            "Gluten Free",
+            "Organic",
+            "Wegmans Brand"
+          ],
+          "bottleDeposit": 0,
+          "lastUpdated": "2026-08-01T11:27:56+00:00",
+          "categoryNodes": {
+            "lvl0": "Dairy",
+            "lvl1": "Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Milk"
+          },
+          "loyaltyDeliveryDiscount": [],
+          "isSoldAtStore": true,
+          "price_deliveryLoyalty": {},
+          "consumerBrandName": "Wegmans",
+          "category": [
+            {
+              "name": "Milk",
+              "key": "2957428",
+              "seo": "Milk-2957428"
+            },
+            {
+              "name": "Milk, Juice and Refrigerated Beverage",
+              "key": "2957433",
+              "seo": "Milk-Juice-and-Refrigerated-Beverage-2957433"
+            },
+            {
+              "name": "Dairy",
+              "key": "2952075",
+              "seo": "Dairy-2952075"
+            }
+          ],
+          "onlineSellByUnit": "ea",
+          "nutrition": {
+            "serving": {
+              "servingSize": "240",
+              "servingSizeUom": "mL",
+              "servingsPerContainer": "about 8",
+              "householdMeasurement": "1 Cup"
+            },
+            "nutritions": [
+              {
+                "general": [
+                  {
+                    "name": "Calories",
+                    "quantity": 150,
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Fat",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 10
+                  },
+                  {
+                    "name": "Saturated Fat",
+                    "quantity": 4.5,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 23
+                  },
+                  {
+                    "name": "Trans Fat",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Cholesterol",
+                    "quantity": 25,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 8
+                  },
+                  {
+                    "name": "Sodium",
+                    "quantity": 115,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 5
+                  },
+                  {
+                    "name": "Total Carbohydrate",
+                    "quantity": 12,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 4
+                  },
+                  {
+                    "name": "Dietary Fiber",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Sugars",
+                    "quantity": 12,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Includes Added Sugars",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Protein",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  }
+                ],
+                "vitamins": [
+                  {
+                    "name": "Vitamin D",
+                    "quantity": 2.5,
+                    "unitOfMeasure": "mcg",
+                    "percentOfDaily": 15
+                  },
+                  {
+                    "name": "Calcium",
+                    "quantity": 270,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 20
+                  },
+                  {
+                    "name": "Iron",
+                    "quantity": 0,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Potassium",
+                    "quantity": 320,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 6
+                  }
+                ],
+                "contains": "ALLERGENS:  Contains Milk.  "
+              }
+            ]
+          },
+          "ingredients": "Organic Milk, Vitamin D3.",
+          "isSoldByWeight": false,
+          "hasOffers": true,
+          "isAlcoholItem": false,
+          "isAvailable": true,
+          "loyaltyInstoreDiscount": [],
+          "maxQuantity": 20,
+          "reviewCount": 9,
+          "onlineApproxUnitWeight": 0,
+          "ebtEligible": true,
+          "fulfilmentType": [
+            "instore",
+            "pickup",
+            "delivery"
+          ],
+          "restrictedOTC": false,
+          "wellnessKeys": [
+            "Gluten Free"
+          ],
+          "isIWSProduct": false,
+          "isLoyalty": false,
+          "productID": "33330",
+          "instructions": "Keep Refrigerated.",
+          "slug": "33330-Vitamin-D-Whole-Milk",
+          "upc": [
+            "00077890333303"
+          ],
+          "allergensAndWarnings": "ALLERGENS:  Contains Milk.",
+          "objectID": "91-33330",
+          "_highlightResult": {
+            "productName": {
+              "value": "Wegmans <em>Organic</em> Vitamin D <em>Whole</em> <em>Milk</em>",
+              "matchLevel": "full",
+              "fullyHighlighted": false,
+              "matchedWords": [
+                "organic",
+                "whole",
+                "milk"
+              ]
+            }
+          },
+          "webProductDescription": "Vitamin D Whole Milk",
+          "keywords": [
+            "organic vitamin d whole milk",
+            "milk"
+          ],
+          "requiredMinimumAgeToBuy": 0,
+          "categories": {
+            "lvl0": "Dairy",
+            "lvl1": "Dairy > Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          },
+          "productId": "33330",
+          "images": [
+            "https://images.wegmans.com/is/image/wegmanscsprod/33330_PrimaryImage?v=ced2d4ce449e95ef30a88b4652b9197e0bc1e7d6"
+          ],
+          "discountType": "",
+          "excludeFromWeb": false,
+          "packSize": "0.5 gallon",
+          "productKeywords": [
+            "organic vitamin d whole milk",
+            "milk"
+          ],
+          "productName": "Wegmans Organic Vitamin D Whole Milk",
+          "price_inStoreLoyalty": {},
+          "categoryFacets": {
+            "type": [
+              "Cow"
+            ],
+            "size": [
+              "Half Gallon"
+            ],
+            "milk%": [
+              "Whole"
+            ],
+            "flavor": [
+              "Unflavored"
+            ]
+          },
+          "productDescription": "USDA Organic.  Pasteurized.  Grade A.  Vitamins D.  Homogenized.  Our Farmers Pledge: From cows not treated with artificial growth hormones.*  Processed and packaged at plant stamped on bottle.  *No significant difference has been shown in milk derived from artificial growth hormone-treated and non-treated cows. ",
+          "popularTags": [
+            "Organic",
+            "Wegmans Brand"
+          ],
+          "digitalCouponsOfferIds": [
+            "7206078",
+            "7286519",
+            "7461062",
+            "7224937",
+            "7331812",
+            "7206083",
+            "7363761",
+            "7531458",
+            "7461065",
+            "7363770",
+            "7331811",
+            "7224934",
+            "7531457",
+            "7582172",
+            "7582171",
+            "7633810"
+          ],
+          "soldByVendor": "",
+          "planogram": {
+            "aisle": "Dairy",
+            "shelf": "3"
+          },
+          "consumerSubBrandName": "Organic",
+          "taxCode": "0554-000",
+          "skuId": "33330",
+          "storeNumber": "91",
+          "price_delivery": {
+            "unitPrice": "$9.18/gallon",
+            "amount": 4.59,
+            "channelKey": "91-Delivery"
+          },
+          "categoryPageId": [
+            "Dairy",
+            "Dairy > Milk, Juice and Refrigerated Beverage",
+            "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          ]
+        },
+        {
+          "isSoldByWeight": false,
+          "isAvailable": true,
+          "consumerSubBrandName": "Organic",
+          "packSize": "1 gallon",
+          "instructions": "Keep Refrigerated.",
+          "restrictedOTC": false,
+          "hasOffers": true,
+          "nutrition": {
+            "serving": {
+              "servingSize": "240",
+              "servingSizeUom": "mL",
+              "servingsPerContainer": "About 16",
+              "householdMeasurement": "1 Cup"
+            },
+            "nutritions": [
+              {
+                "general": [
+                  {
+                    "name": "Calories",
+                    "quantity": 150,
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Fat",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 10
+                  },
+                  {
+                    "name": "Saturated Fat",
+                    "quantity": 4.5,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 23
+                  },
+                  {
+                    "name": "Trans Fat",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Cholesterol",
+                    "quantity": 25,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 8
+                  },
+                  {
+                    "name": "Sodium",
+                    "quantity": 115,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 5
+                  },
+                  {
+                    "name": "Total Carbohydrate",
+                    "quantity": 12,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 4
+                  },
+                  {
+                    "name": "Dietary Fiber",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Sugars",
+                    "quantity": 12,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Includes Added Sugars",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Protein",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  }
+                ],
+                "vitamins": [
+                  {
+                    "name": "Vitamin D",
+                    "quantity": 2.5,
+                    "unitOfMeasure": "mcg",
+                    "percentOfDaily": 15
+                  },
+                  {
+                    "name": "Calcium",
+                    "quantity": 270,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 20
+                  },
+                  {
+                    "name": "Iron",
+                    "quantity": 0,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Potassium",
+                    "quantity": 320,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 6
+                  }
+                ],
+                "contains": "ALLERGENS:  Contains Milk."
+              }
+            ]
+          },
+          "productId": "33261",
+          "categoryNodes": {
+            "lvl0": "Dairy",
+            "lvl1": "Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Milk"
+          },
+          "requiredMinimumAgeToBuy": 0,
+          "soldByVendor": "",
+          "onlineSellByUnit": "ea",
+          "reviewCount": 27,
+          "images": [
+            "https://images.wegmans.com/is/image/wegmanscsprod/33261_PrimaryImage?v=a5033b0ce56a695d0c54284ba4717d5e59c58d3a"
+          ],
+          "isAlcoholItem": false,
+          "averageStarRating": 4.037,
+          "fulfilmentType": [
+            "instore",
+            "pickup",
+            "delivery"
+          ],
+          "planogram": {
+            "aisle": "Dairy",
+            "shelf": "2"
+          },
+          "storeNumber": "91",
+          "filterTags": [
+            "Gluten Free",
+            "Family Pack",
+            "Kosher",
+            "Organic",
+            "Wegmans Brand"
+          ],
+          "categories": {
+            "lvl0": "Dairy",
+            "lvl1": "Dairy > Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          },
+          "price_delivery": {
+            "unitPrice": "$8.09/gallon",
+            "amount": 8.09,
+            "channelKey": "91-Delivery"
+          },
+          "productName": "Wegmans Organic Vitamin D Whole Milk",
+          "allergensAndWarnings": "ALLERGENS:  Contains Milk.",
+          "isNewItem": false,
+          "skuId": "33261",
+          "category": [
+            {
+              "name": "Milk",
+              "key": "2957428",
+              "seo": "Milk-2957428"
+            },
+            {
+              "name": "Milk, Juice and Refrigerated Beverage",
+              "key": "2957433",
+              "seo": "Milk-Juice-and-Refrigerated-Beverage-2957433"
+            },
+            {
+              "name": "Dairy",
+              "key": "2952075",
+              "seo": "Dairy-2952075"
+            }
+          ],
+          "productID": "33261",
+          "price_deliveryLoyalty": {},
+          "loyaltyDeliveryDiscount": [],
+          "productDescription": "USDA Organic.  Pasteurized.  Grade A.  Vitamins D.  Homogenized.  Our Farmers Pledge: From cows not treated with artificial growth hormones.*  Processed and packaged at plant stamped on bottle.  *No significant difference has been shown in milk derived from artificial growth hormone-treated and non-treated cow",
+          "consumerBrandName": "Wegmans",
+          "taxCode": "0554-000",
+          "lastUpdated": "2026-08-01T11:23:19+00:00",
+          "objectID": "91-33261",
+          "slug": "33261-Vitamin-D-Whole-Milk",
+          "isLoyalty": false,
+          "loyaltyInstoreDiscount": [],
+          "wellnessKeys": [
+            "Gluten Free"
+          ],
+          "ingredients": "Organic Milk, Vitamin D3.",
+          "isSoldAtStore": true,
+          "digitalCouponsOfferIds": [
+            "7206078",
+            "7286519",
+            "7461062",
+            "7224937",
+            "7331812",
+            "7206083",
+            "7363761",
+            "7531458",
+            "7461065",
+            "7363770",
+            "7331811",
+            "7224934",
+            "7531457",
+            "7582172",
+            "7582171",
+            "7633810"
+          ],
+          "bottleDeposit": 0,
+          "keywords": [
+            "organic whole milk",
+            "milk"
+          ],
+          "_highlightResult": {
+            "productName": {
+              "value": "Wegmans <em>Organic</em> Vitamin D <em>Whole</em> <em>Milk</em>",
+              "matchLevel": "full",
+              "fullyHighlighted": false,
+              "matchedWords": [
+                "organic",
+                "whole",
+                "milk"
+              ]
+            }
+          },
+          "discountType": "",
+          "categoryPageId": [
+            "Dairy",
+            "Dairy > Milk, Juice and Refrigerated Beverage",
+            "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          ],
+          "price_inStore": {
+            "unitPrice": "$6.99/gallon",
+            "amount": 6.99,
+            "channelKey": "91-Instore"
+          },
+          "maxQuantity": 20,
+          "excludeFromWeb": false,
+          "ebtEligible": true,
+          "popularTags": [
+            "Family Pack",
+            "Kosher",
+            "Organic",
+            "Wegmans Brand"
+          ],
+          "upc": [
+            "00077890332610"
+          ],
+          "categoryFacets": {
+            "type": [
+              "Cow"
+            ],
+            "size": [
+              "Gallon"
+            ],
+            "milk%": [
+              "Whole"
+            ],
+            "flavor": [
+              "Unflavored"
+            ]
+          },
+          "productKeywords": [
+            "organic whole milk",
+            "milk"
+          ],
+          "price_inStoreLoyalty": {},
+          "onlineApproxUnitWeight": 0,
+          "isIWSProduct": false,
+          "webProductDescription": "Vitamin D Whole Milk"
+        },
+        {
+          "isLoyalty": false,
+          "isNewItem": false,
+          "packSize": "64 fl. oz.",
+          "category": [
+            {
+              "name": "Milk",
+              "key": "2957428",
+              "seo": "Milk-2957428"
+            },
+            {
+              "name": "Milk, Juice and Refrigerated Beverage",
+              "key": "2957433",
+              "seo": "Milk-Juice-and-Refrigerated-Beverage-2957433"
+            },
+            {
+              "name": "Dairy",
+              "key": "2952075",
+              "seo": "Dairy-2952075"
+            }
+          ],
+          "price_delivery": {
+            "unitPrice": "$0.10/fl. oz.",
+            "amount": 6.59,
+            "channelKey": "91-Delivery"
+          },
+          "popularTags": [
+            "Kosher",
+            "Organic"
+          ],
+          "allergensAndWarnings": null,
+          "loyaltyDeliveryDiscount": [],
+          "onlineApproxUnitWeight": 0,
+          "categoryFacets": {
+            "type": [
+              "Cow"
+            ],
+            "size": [
+              "Half Gallon"
+            ],
+            "milk%": [
+              "Whole"
+            ],
+            "flavor": [
+              "Unflavored"
+            ]
+          },
+          "productKeywords": [
+            "organic whole milk",
+            "milk"
+          ],
+          "storeNumber": "91",
+          "onlineSellByUnit": "ea",
+          "hasOffers": true,
+          "isAlcoholItem": false,
+          "isSoldByWeight": false,
+          "reviewCount": 9,
+          "ingredients": "Organic Grade A Milk, Vitamin D3.",
+          "lastUpdated": "2026-08-01T11:20:19+00:00",
+          "objectID": "91-211083",
+          "_highlightResult": {
+            "productName": {
+              "value": "<em>Organic</em> Valley <em>Milk</em>, <em>Whole</em>",
+              "matchLevel": "full",
+              "fullyHighlighted": false,
+              "matchedWords": [
+                "organic",
+                "whole",
+                "milk"
+              ]
+            }
+          },
+          "loyaltyInstoreDiscount": [],
+          "fulfilmentType": [
+            "instore",
+            "pickup",
+            "delivery"
+          ],
+          "isAvailable": true,
+          "planogram": {
+            "aisle": "Dairy",
+            "shelf": "6"
+          },
+          "requiredMinimumAgeToBuy": 0,
+          "images": [
+            "https://images.wegmans.com/is/image/wegmanscsprod/211083_PrimaryImage?v=dceb0881d83d1f5cab2c05b1aabedc58071f0fed"
+          ],
+          "discountType": "",
+          "ebtEligible": true,
+          "bottleDeposit": 0,
+          "price_deliveryLoyalty": {},
+          "productId": "211083",
+          "productID": "211083",
+          "soldByVendor": "",
+          "keywords": [
+            "organic whole milk",
+            "milk"
+          ],
+          "slug": "211083-Milk-Whole",
+          "excludeFromWeb": false,
+          "restrictedOTC": false,
+          "wellnessKeys": [],
+          "productDescription": "Organic Valley Foods ultra high temperature whole Milk-National Brand 64 FO",
+          "consumerBrandName": "Organic Valley",
+          "instructions": "Keep refrigerated.\nFresh tasting within 7 days of opening.",
+          "webProductDescription": "Milk, Whole",
+          "price_inStoreLoyalty": {},
+          "isIWSProduct": false,
+          "consumerSubBrandName": "Organic Valley",
+          "skuId": "211083",
+          "categoryPageId": [
+            "Dairy",
+            "Dairy > Milk, Juice and Refrigerated Beverage",
+            "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          ],
+          "isSoldAtStore": true,
+          "price_inStore": {
+            "unitPrice": "$0.09/fl. oz.",
+            "amount": 5.69,
+            "channelKey": "91-Instore"
+          },
+          "upc": [
+            "00093966513004"
+          ],
+          "taxCode": "0554-000",
+          "nutrition": {
+            "serving": {
+              "servingSize": "240",
+              "servingsPerContainer": "8",
+              "householdMeasurement": "1 "
+            },
+            "nutritions": [
+              {
+                "general": [
+                  {
+                    "name": "Calories",
+                    "quantity": 150,
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Fat",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 10
+                  },
+                  {
+                    "name": "Saturated Fat",
+                    "quantity": 5,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 25
+                  },
+                  {
+                    "name": "Trans Fat",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Cholesterol",
+                    "quantity": 30,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 10
+                  },
+                  {
+                    "name": "Sodium",
+                    "quantity": 120,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 5
+                  },
+                  {
+                    "name": "Total Carbohydrate",
+                    "quantity": 12,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 4
+                  },
+                  {
+                    "name": "Dietary Fiber",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Sugars",
+                    "quantity": 11,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Includes Added Sugars",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Protein",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  }
+                ],
+                "vitamins": [
+                  {
+                    "name": "Vitamin D",
+                    "quantity": 2.6,
+                    "unitOfMeasure": "mcg",
+                    "percentOfDaily": 15
+                  },
+                  {
+                    "name": "Calcium",
+                    "quantity": 280,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 20
+                  },
+                  {
+                    "name": "Iron",
+                    "quantity": 0.1,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Potassium",
+                    "quantity": 350,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 8
+                  }
+                ]
+              }
+            ]
+          },
+          "categoryNodes": {
+            "lvl0": "Dairy",
+            "lvl1": "Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Milk"
+          },
+          "productName": "Organic Valley Milk, Whole",
+          "categories": {
+            "lvl0": "Dairy",
+            "lvl1": "Dairy > Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          },
+          "maxQuantity": 20,
+          "averageStarRating": 4.2222,
+          "filterTags": [
+            "Kosher",
+            "Organic"
+          ],
+          "digitalCouponsOfferIds": [
+            "7363770",
+            "7531458",
+            "7206083",
+            "7461062",
+            "7331812",
+            "7531457",
+            "7224934",
+            "7363761",
+            "7331811",
+            "7461065",
+            "7286519",
+            "7206078",
+            "7224937",
+            "7582172",
+            "7582171",
+            "7633810"
+          ]
+        },
+        {
+          "taxCode": "0554-000",
+          "keywords": [
+            "organic whole milk",
+            "milk"
+          ],
+          "loyaltyInstoreDiscount": [],
+          "isSoldAtStore": true,
+          "productID": "969614",
+          "popularTags": [
+            "Kosher",
+            "Organic"
+          ],
+          "consumerSubBrandName": "Grassmilk",
+          "discountType": "",
+          "ebtEligible": true,
+          "upc": [
+            "00093966009989"
+          ],
+          "isLoyalty": false,
+          "price_inStore": {
+            "unitPrice": "$0.12/fl. oz.",
+            "amount": 6.99,
+            "channelKey": "91-Instore"
+          },
+          "hasOffers": true,
+          "filterTags": [
+            "Kosher",
+            "Organic"
+          ],
+          "digitalCouponsOfferIds": [
+            "7363761",
+            "7331812",
+            "7206083",
+            "7286519",
+            "7582171",
+            "7224934",
+            "7461062",
+            "7206078",
+            "7363770",
+            "7531458",
+            "7531457",
+            "7331811",
+            "7582172",
+            "7633810",
+            "7461065",
+            "7224937"
+          ],
+          "categoryNodes": {
+            "lvl0": "Dairy",
+            "lvl1": "Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Milk"
+          },
+          "isNewItem": false,
+          "productKeywords": [
+            "organic whole milk",
+            "milk"
+          ],
+          "productId": "969614",
+          "isSoldByWeight": false,
+          "maxQuantity": 20,
+          "packSize": "59 fl. oz.",
+          "restrictedOTC": false,
+          "storeNumber": "91",
+          "isAvailable": true,
+          "ingredients": "Organic Grade A Milk, Vitamin D3.",
+          "objectID": "91-969614",
+          "planogram": {
+            "aisle": "Dairy",
+            "shelf": "5"
+          },
+          "lastUpdated": "2026-08-01T11:23:26+00:00",
+          "productName": "Organic Valley Grassmilk Whole Milk",
+          "averageStarRating": 3,
+          "onlineApproxUnitWeight": 0,
+          "loyaltyDeliveryDiscount": [],
+          "productDescription": "Organic Valley Foods Organic Whole Grass Milk-Natures 59 FO",
+          "slug": "969614-Whole-Milk",
+          "wellnessKeys": [],
+          "allergensAndWarnings": null,
+          "_highlightResult": {
+            "productName": {
+              "value": "<em>Organic</em> Valley Grassmilk <em>Whole</em> <em>Milk</em>",
+              "matchLevel": "full",
+              "fullyHighlighted": false,
+              "matchedWords": [
+                "organic",
+                "whole",
+                "milk"
+              ]
+            }
+          },
+          "category": [
+            {
+              "name": "Milk",
+              "key": "2957428",
+              "seo": "Milk-2957428"
+            },
+            {
+              "name": "Milk, Juice and Refrigerated Beverage",
+              "key": "2957433",
+              "seo": "Milk-Juice-and-Refrigerated-Beverage-2957433"
+            },
+            {
+              "name": "Dairy",
+              "key": "2952075",
+              "seo": "Dairy-2952075"
+            }
+          ],
+          "isAlcoholItem": false,
+          "nutrition": {
+            "serving": {
+              "servingSize": "240",
+              "servingsPerContainer": "About 7",
+              "householdMeasurement": "1 "
+            },
+            "nutritions": [
+              {
+                "general": [
+                  {
+                    "name": "Calories",
+                    "quantity": 150,
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Fat",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 10
+                  },
+                  {
+                    "name": "Saturated Fat",
+                    "quantity": 5,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 25
+                  },
+                  {
+                    "name": "Trans Fat",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Cholesterol",
+                    "quantity": 30,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 10
+                  },
+                  {
+                    "name": "Sodium",
+                    "quantity": 120,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 5
+                  },
+                  {
+                    "name": "Total Carbohydrate",
+                    "quantity": 12,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 4
+                  },
+                  {
+                    "name": "Dietary Fiber",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Sugars",
+                    "quantity": 11,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Includes Added Sugars",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Protein",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  }
+                ],
+                "vitamins": [
+                  {
+                    "name": "Vitamin D",
+                    "quantity": 2.6,
+                    "unitOfMeasure": "mcg",
+                    "percentOfDaily": 15
+                  },
+                  {
+                    "name": "Calcium",
+                    "quantity": 280,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 20
+                  },
+                  {
+                    "name": "Iron",
+                    "quantity": 0.1,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Potassium",
+                    "quantity": 350,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 8
+                  }
+                ]
+              }
+            ]
+          },
+          "soldByVendor": "",
+          "price_inStoreLoyalty": {},
+          "images": [
+            "https://images.wegmans.com/is/image/wegmanscsprod/969614_PrimaryImage?v=721d987411bf0b8fd1b0b8deea922dfc6d5bbc1a"
+          ],
+          "categoryPageId": [
+            "Dairy",
+            "Dairy > Milk, Juice and Refrigerated Beverage",
+            "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          ],
+          "price_delivery": {
+            "unitPrice": "$0.14/fl. oz.",
+            "amount": 8.09,
+            "channelKey": "91-Delivery"
+          },
+          "requiredMinimumAgeToBuy": 0,
+          "categoryFacets": {},
+          "fulfilmentType": [
+            "instore",
+            "pickup",
+            "delivery"
+          ],
+          "isIWSProduct": false,
+          "categories": {
+            "lvl0": "Dairy",
+            "lvl1": "Dairy > Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          },
+          "isWegmansPartnerBrand": false,
+          "bottleDeposit": 0,
+          "price_deliveryLoyalty": {},
+          "consumerBrandName": "Organic Valley",
+          "excludeFromWeb": false,
+          "skuId": "969614",
+          "webProductDescription": "Whole Milk",
+          "onlineSellByUnit": "ea",
+          "reviewCount": 2,
+          "instructions": "Keep refrigerated.\nFresh tasting within 7 days of opening. Best if used by date stamped on top."
+        },
+        {
+          "webProductDescription": "Organic Whole Milk",
+          "isSoldByWeight": false,
+          "productKeywords": [
+            "organic whole milk",
+            "milk"
+          ],
+          "loyaltyDeliveryDiscount": [],
+          "lastUpdated": "2026-08-01T11:20:23+00:00",
+          "isSoldAtStore": true,
+          "maxQuantity": 20,
+          "digitalCouponsOfferIds": [
+            "7206078",
+            "7531457",
+            "7224934",
+            "7224937",
+            "7206083",
+            "7363761",
+            "7531458",
+            "7331811",
+            "7461065",
+            "7461062",
+            "7363770",
+            "7286519",
+            "7331812",
+            "7582172",
+            "7582171",
+            "7633810",
+            "8300619"
+          ],
+          "_highlightResult": {
+            "productName": {
+              "value": "Horizon <em>Organic</em> <em>Organic</em> <em>Whole</em> <em>Milk</em>",
+              "matchLevel": "full",
+              "fullyHighlighted": false,
+              "matchedWords": [
+                "organic",
+                "whole",
+                "milk"
+              ]
+            }
+          },
+          "isAlcoholItem": false,
+          "price_inStoreLoyalty": {},
+          "price_deliveryLoyalty": {},
+          "storeNumber": "91",
+          "restrictedOTC": false,
+          "objectID": "91-116312",
+          "categories": {
+            "lvl0": "Dairy",
+            "lvl1": "Dairy > Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          },
+          "isNewItem": false,
+          "allergensAndWarnings": "Contains milk.",
+          "fulfilmentType": [
+            "instore",
+            "pickup",
+            "delivery"
+          ],
+          "soldByVendor": "",
+          "productName": "Horizon Organic Organic Whole Milk",
+          "categoryNodes": {
+            "lvl0": "Dairy",
+            "lvl1": "Milk, Juice and Refrigerated Beverage",
+            "lvl2": "Milk"
+          },
+          "hasOffers": true,
+          "reviewCount": 3,
+          "isIWSProduct": false,
+          "ebtEligible": true,
+          "category": [
+            {
+              "name": "Milk",
+              "key": "2957428",
+              "seo": "Milk-2957428"
+            },
+            {
+              "name": "Milk, Juice and Refrigerated Beverage",
+              "key": "2957433",
+              "seo": "Milk-Juice-and-Refrigerated-Beverage-2957433"
+            },
+            {
+              "name": "Dairy",
+              "key": "2952075",
+              "seo": "Dairy-2952075"
+            }
+          ],
+          "ingredients": "Grade A Organic Milk, Vitamin D3.",
+          "keywords": [
+            "organic whole milk",
+            "milk"
+          ],
+          "productDescription": "Get the joy of a cold glass of real milk with Horizon Organic Vitamin D Whole Milk. With 15% of the recommended daily value of vitamin D in every delicious serving, this organic whole milk makes it super easy to get essential nutrients into your day to help support strong bones. Always USDA Certified Organic, every Horizon milk carton comes from cows cared for by trusted farmers. Plus, it comes from cows that are fed non-GMO feed and not treated with antibiotics or growth hormones.* Every 1 cup serving of this ultra-pasteurized whole milk has 8 grams of protein and provides nutrients including calcium and vitamin A. It\u2019s real organic milk that adults and kids can happily enjoy. At Horizon Organic, we believe that organic farming can drive healthier, more sustainable food communities for our world. Pioneering organic for the one horizon we all share. From our farmers to your family, Horizon Organic Milk is nourishing a happy, healthy future. *No significant difference has been shown between milk from rBST-treated & non rBST-treated cows. **Per National Organic Program regulations.",
+          "categoryPageId": [
+            "Dairy",
+            "Dairy > Milk, Juice and Refrigerated Beverage",
+            "Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+          ],
+          "consumerBrandName": "Horizon Organic",
+          "productID": "116312",
+          "images": [
+            "https://images.wegmans.com/is/image/wegmanscsprod/116312_PrimaryImage?v=aa2b77de6cb7d19405e93a6ac750293f7cbbb59a"
+          ],
+          "taxCode": "0554-000",
+          "discountType": "",
+          "requiredMinimumAgeToBuy": 0,
+          "productId": "116312",
+          "onlineSellByUnit": "ea",
+          "averageStarRating": 3.6667,
+          "onlineApproxUnitWeight": 0,
+          "nutrition": {
+            "serving": {
+              "servingSize": "240",
+              "servingsPerContainer": "About 8",
+              "householdMeasurement": "1 "
+            },
+            "nutritions": [
+              {
+                "general": [
+                  {
+                    "name": "Calories",
+                    "quantity": 160,
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Fat",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 10
+                  },
+                  {
+                    "name": "Saturated Fat",
+                    "quantity": 5,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 25
+                  },
+                  {
+                    "name": "Trans Fat",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Cholesterol",
+                    "quantity": 35,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 12
+                  },
+                  {
+                    "name": "Sodium",
+                    "quantity": 135,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 6
+                  },
+                  {
+                    "name": "Total Carbohydrate",
+                    "quantity": 13,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 5
+                  },
+                  {
+                    "name": "Dietary Fiber",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Total Sugars",
+                    "quantity": 12,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Includes Added Sugars",
+                    "quantity": 0,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Protein",
+                    "quantity": 8,
+                    "unitOfMeasure": "g",
+                    "percentOfDaily": 0
+                  }
+                ],
+                "vitamins": [
+                  {
+                    "name": "Vitamin D",
+                    "quantity": 2.5,
+                    "unitOfMeasure": "mcg",
+                    "percentOfDaily": 15
+                  },
+                  {
+                    "name": "Calcium",
+                    "quantity": 290,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 2
+                  },
+                  {
+                    "name": "Iron",
+                    "quantity": 0,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 0
+                  },
+                  {
+                    "name": "Potassium",
+                    "quantity": 380,
+                    "unitOfMeasure": "mg",
+                    "percentOfDaily": 8
+                  }
+                ],
+                "contains": "Contains milk."
+              }
+            ]
+          },
+          "skuId": "116312",
+          "price_delivery": {
+            "unitPrice": "$13.78/gallon",
+            "amount": 6.89,
+            "channelKey": "91-Delivery"
+          },
+          "loyaltyInstoreDiscount": [],
+          "excludeFromWeb": false,
+          "popularTags": [
+            "Kosher",
+            "Organic"
+          ],
+          "packSize": "0.5 gallon",
+          "isLoyalty": false,
+          "bottleDeposit": 0,
+          "slug": "116312-Organic-Whole-Milk",
+          "categoryFacets": {
+            "type": [
+              "Cow"
+            ],
+            "size": [
+              "Half Gallon"
+            ],
+            "milk%": [
+              "Whole"
+            ],
+            "flavor": [
+              "Unflavored"
+            ]
+          },
+          "wellnessKeys": [],
+          "instructions": "Perishable. Keep refrigerated.\nBest if opened by printed date and used within 7 days.",
+          "price_inStore": {
+            "unitPrice": "$11.98/gallon",
+            "amount": 5.99,
+            "channelKey": "91-Instore"
+          },
+          "planogram": {
+            "aisle": "Dairy",
+            "shelf": "6"
+          },
+          "isAvailable": true,
+          "filterTags": [
+            "Kosher",
+            "Organic"
+          ],
+          "upc": [
+            "00742365264450"
+          ]
+        }
+      ],
+      "nbHits": 35,
+      "hitsPerPage": 5,
+      "index": "products",
+      "page": 0,
+      "nbPages": 7,
+      "processingTimeMS": 43,
+      "processingTimingsMS": {
+        "getAIConfig": {
+          "total": 0
+        },
+        "runLegacyExtension": {
+          "total": 8
+        },
+        "makeLegacyExtensionAggregateResponse": {
+          "total": 0
+        },
+        "legacyKeywordSearch": {
+          "_request": {
+            "roundTrip": 3
+          },
+          "extractDocsToPromoteDetails": {
+            "pinRetrieval": {
+              "search": {
+                "total": 1
+              },
+              "total": 3,
+              "filterSetup": 1
+            },
+            "total": 3
+          },
+          "rulesProcessing": {
+            "total": 1
+          },
+          "fetch": {
+            "scanning": 20,
+            "total": 22,
+            "query": 1
+          },
+          "total": 33
+        },
+        "total": 43,
+        "makeLegacyExtensionRequest": {
+          "total": 0
+        },
+        "normalizeText": {
+          "total": 0
+        },
+        "isLegacyExtensionEnabled": {
+          "total": 0
+        }
+      },
+      "exhaustiveNbHits": false,
+      "exhaustiveTypo": false,
+      "facets_stats": {
+        "maxQuantity": {
+          "min": 5,
+          "max": 99,
+          "avg": 66,
+          "sum": 2329
+        },
+        "storeNumber": {
+          "min": 91,
+          "max": 91,
+          "avg": 91,
+          "sum": 3185
+        },
+        "category.key": {
+          "min": 2952075,
+          "max": 5681806,
+          "avg": 3438032,
+          "sum": 367869482
+        },
+        "digitalCouponsOfferIds": {
+          "min": 7206078,
+          "max": 8300619,
+          "avg": 7400320,
+          "sum": 3833366024
+        }
+      },
+      "query": "organic whole milk",
+      "queryAfterRemoval": "organic whole milk",
+      "params": "query=organic+whole+milk&hitsPerPage=5&page=0&facets=%5B%22%2A%22%5D&maxValuesPerFacet=1001&filters=storeNumber%3A91+AND+fulfilmentType%3Ainstore+AND+excludeFromWeb%3Afalse+AND+isSoldAtStore%3Atrue",
+      "facets": {
+        "keywords": {
+          "yogurt": 18,
+          "milk": 14,
+          "organic whole milk": 9,
+          "cottage cheese": 2,
+          "organic greek whole milk yogurt": 2,
+          "organic plain whole milk yogurt": 2,
+          "organic strawberry yogurt": 2,
+          "organic vanilla whole milk yogurt": 2,
+          "organic whole milk cottage cheese": 2,
+          "whole milk": 2,
+          "apple blueberry whole milk yogurt": 1,
+          "baby yogurt": 1,
+          "organic banana oat baby yogurt": 1,
+          "organic banana strawberry baby yogurt": 1,
+          "organic cherry berry pear yogurt": 1,
+          "organic greek vanilla yogurt": 1,
+          "organic kids strawberry banana yogurt": 1,
+          "organic lactose free whole milk": 1,
+          "organic mixed berry yogurt": 1,
+          "organic pear spinach mango yogurt": 1,
+          "organic protein whole milk": 1,
+          "organic strawberry banana yogurt": 1,
+          "organic strawberry beet berry yogurt": 1,
+          "organic vitamin d whole milk": 1,
+          "organic whole milk banana vanilla yogurt pouches": 1
+        },
+        "hasOffers": {
+          "true": 34,
+          "false": 1
+        },
+        "isHotZone": {
+          "false": 1
+        },
+        "isLoyalty": {
+          "false": 35
+        },
+        "isNewItem": {
+          "false": 35
+        },
+        "filterTags": {
+          "Kosher": 30,
+          "Organic": 29,
+          "NationalBrandGlutenFree": 14,
+          "Gluten Free": 8,
+          "Wegmans Brand": 8,
+          "Family Pack": 4,
+          "Food You Feel Good About": 2
+        },
+        "ebtEligible": {
+          "true": 35
+        },
+        "isAvailable": {
+          "true": 34,
+          "false": 1
+        },
+        "maxQuantity": {
+          "99": 21,
+          "20": 12,
+          "5": 2
+        },
+        "popularTags": {
+          "Kosher": 30,
+          "Organic": 29,
+          "Wegmans Brand": 8,
+          "Family Pack": 4,
+          "Food You Feel Good About": 2
+        },
+        "storeNumber": {
+          "91": 35
+        },
+        "category.key": {
+          "2952075": 33,
+          "2957536": 19,
+          "2957428": 12,
+          "2957433": 12,
+          "5107594": 11,
+          "5107590": 4,
+          "5107593": 3,
+          "2957334": 2,
+          "2957337": 2,
+          "2957537": 2,
+          "2957622": 2,
+          "5605975": 2,
+          "5681806": 2,
+          "5107596": 1
+        },
+        "category.seo": {
+          "Dairy-2952075": 33,
+          "Yogurt-2957536": 19,
+          "Milk-2957428": 12,
+          "Milk-Juice-and-Refrigerated-Beverage-2957433": 12,
+          "Kids-5107594": 11,
+          "Blended-and-Fruit-on-the-Bottom-5107590": 4,
+          "Greek-5107593": 3,
+          "Beverages-2957337": 2,
+          "Cottage-Cheese-5605975": 2,
+          "Cottage-and-Ricotta-Cheese-2957537": 2,
+          "Dairy-Protein-5681806": 2,
+          "Grocery-2957334": 2,
+          "Shelf-Stable-Beverages-2957622": 2,
+          "Specialty-Yogurt-5107596": 1
+        },
+        "isIWSProduct": {
+          "false": 35
+        },
+        "isAlcoholItem": {
+          "false": 35
+        },
+        "categoryPageId": {
+          "Dairy": 33,
+          "Dairy > Yogurt": 19,
+          "Dairy > Milk, Juice and Refrigerated Beverage": 12,
+          "Dairy > Milk, Juice and Refrigerated Beverage > Milk": 12,
+          "Dairy > Yogurt > Kids": 11,
+          "Dairy > Yogurt > Blended and Fruit on the Bottom": 4,
+          "Dairy > Yogurt > Greek": 3,
+          "Dairy > Cottage and Ricotta Cheese": 2,
+          "Dairy > Cottage and Ricotta Cheese > Cottage Cheese": 2,
+          "Grocery": 2,
+          "Grocery > Beverages": 2,
+          "Grocery > Beverages > Shelf Stable Beverages": 2,
+          "Grocery > Beverages > Shelf Stable Beverages > Dairy & Protein": 2,
+          "Dairy > Yogurt > Specialty Yogurt": 1
+        },
+        "fulfilmentType": {
+          "delivery": 35,
+          "instore": 35,
+          "pickup": 35
+        },
+        "isSoldByWeight": {
+          "false": 35
+        },
+        "categories.lvl0": {
+          "Dairy": 33,
+          "Grocery": 2
+        },
+        "categories.lvl1": {
+          "Dairy > Yogurt": 19,
+          "Dairy > Milk, Juice and Refrigerated Beverage": 12,
+          "Dairy > Cottage and Ricotta Cheese": 2,
+          "Grocery > Beverages": 2
+        },
+        "categories.lvl2": {
+          "Dairy > Milk, Juice and Refrigerated Beverage > Milk": 12,
+          "Dairy > Yogurt > Kids": 11,
+          "Dairy > Yogurt > Blended and Fruit on the Bottom": 4,
+          "Dairy > Yogurt > Greek": 3,
+          "Dairy > Cottage and Ricotta Cheese > Cottage Cheese": 2,
+          "Grocery > Beverages > Shelf Stable Beverages": 2,
+          "Dairy > Yogurt > Specialty Yogurt": 1
+        },
+        "categories.lvl3": {
+          "Grocery > Beverages > Shelf Stable Beverages > Dairy & Protein": 2
+        },
+        "onlineSellByUnit": {
+          "ea": 35
+        },
+        "consumerBrandName": {
+          "Stonyfield Organic": 11,
+          "Wegmans": 8,
+          "Organic Valley": 6,
+          "Horizon Organic": 4,
+          "Family Farmstead": 2,
+          "Good Culture": 2,
+          "Nancys": 1,
+          "Stonyfield Farm": 1
+        },
+        "categoryFacets.size": {
+          "Multi Pack": 8,
+          "Multi Serve": 8,
+          "Half Gallon": 5,
+          "Gallon": 1
+        },
+        "categoryFacets.type": {
+          "Kids": 8,
+          "Cow": 6,
+          "Blended": 5,
+          "Greek": 2,
+          "Specialty": 1
+        },
+        "categoryFacets.milk%": {
+          "Whole": 6
+        },
+        "categoryFacets.flavor": {
+          "Flavored": 12,
+          "Unflavored": 6,
+          "Plain": 4
+        },
+        "digitalCouponsOfferIds": {
+          "7206078": 32,
+          "7206083": 32,
+          "7224934": 32,
+          "7224937": 32,
+          "7286519": 32,
+          "7331811": 32,
+          "7331812": 32,
+          "7363761": 32,
+          "7363770": 32,
+          "7461062": 32,
+          "7461065": 32,
+          "7531457": 32,
+          "7531458": 32,
+          "7582171": 32,
+          "7582172": 32,
+          "7633810": 32,
+          "7582181": 2,
+          "7633812": 2,
+          "8300619": 2
+        },
+        "categoryFacets.countryOfOrigin": {
+          "United States of America (the)": 1
+        }
+      },
+      "extensions": {
+        "queryCategorization": {
+          "autofiltering": {
+            "enabled": true,
+            "maxDepth": 5,
+            "facetFilters": [],
+            "optionalFilters": [
+              "categories.lvl0:Dairy",
+              "categories.lvl1:Dairy > Milk, Juice and Refrigerated Beverage",
+              "categories.lvl2:Dairy > Milk, Juice and Refrigerated Beverage > Milk"
+            ]
+          },
+          "count": 5029,
+          "normalizedQuery": "organic whole milk"
+        }
+      },
+      "renderingContent": {
+        "facetOrdering": {
+          "facets": {
+            "order": [
+              "categories.lvl0",
+              "categories.lvl1",
+              "categories.lvl2",
+              "categories.lvl3",
+              "categories.lvl4",
+              "categoryFacets",
+              "storeNumber"
+            ]
+          },
+          "values": {
+            "categories.lvl0": {
+              "sortRemainingBy": "alpha"
+            },
+            "categories.lvl1": {
+              "sortRemainingBy": "alpha"
+            },
+            "categories.lvl2": {
+              "sortRemainingBy": "alpha"
+            },
+            "categories.lvl3": {
+              "sortRemainingBy": "alpha"
+            },
+            "categories.lvl4": {
+              "sortRemainingBy": "alpha"
+            },
+            "categoryFacets": {
+              "sortRemainingBy": "count"
+            },
+            "storeNumber": {
+              "sortRemainingBy": "alpha"
+            }
+          }
+        }
+      },
+      "exhaustive": {
+        "facetsCount": true,
+        "nbHits": false,
+        "typo": false
+      },
+      "exhaustiveFacetsCount": true,
+      "aiReRanking": {
+        "reRankingActivated": true,
+        "persoImpactInsideActivationWindow": false
+      }
+    }
+  ]
+}

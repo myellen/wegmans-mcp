@@ -89,3 +89,41 @@ await clip_coupons()  # source="shop" default
 # meals2go side (smaller, requires WEGMANS_LOYALTY_ID):
 await clip_coupons(source="meals2go")
 ```
+
+## Converting a shopping list from another chain
+
+The common ask: "here's my Whole Foods / Trader Joe's list, what's the
+Wegmans equivalent?" Grocery search needs no login, so this works even
+before onboarding.
+
+```python
+# 1. set the store first — prices and availability are per-store
+await set_fulfillment(store_id=91, fulfillment_type="delivery")
+
+# 2. one search per list line. Search the product, not the brand:
+#    "365 Organic Whole Milk" finds nothing; "organic whole milk" does.
+await search_groceries(query="organic whole milk", limit=5)
+```
+
+Mapping rules that matter:
+
+- **Store brand → store brand.** Whole Foods 365 and Trader Joe's private
+  label map to `brand="Wegmans"`. Pass `brand="Wegmans"` to force it.
+- **Carry the dietary constraint, not the label.** If the original is
+  organic/gluten-free/kosher, keep it via `organic_only=True` or by
+  checking `tags` on results — that's what makes the substitution honest.
+- **Match pack size, don't just match the name.** Results include
+  `pack_size` and a unit price; a 0.5 gal and 1 gal of the identical
+  product are separate SKUs at very different totals.
+- **Quote the right channel.** Delivery runs ~15% above in-store, and
+  pickup bills at the in-store rate. Set `fulfillment_type` to what the
+  user will actually use, or the total will be wrong.
+- **Flag misses rather than substituting silently.** If nothing matches,
+  say so. A wrong-but-plausible substitution is worse than a gap.
+
+`has_offers` / `coupon_offer_ids` on a result means a digital coupon
+exists for it — worth mentioning, and `clip_coupons` can clip them.
+
+Deliver the result as a table (item, Wegmans product, size, unit price,
+line total) plus an explicit list of anything you couldn't match. **Do not
+offer to add these to a cart — there is no grocery cart.**

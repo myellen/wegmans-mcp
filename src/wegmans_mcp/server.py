@@ -12,7 +12,7 @@ from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
 from .auth import WegmansAuth
-from .client import WegmansClient
+from .client import GROCERY_PRICE_FIELDS, WegmansClient
 
 # Load .env from the current working directory if present. setup_login.py
 # writes the auto-discovered loyalty number there so the user doesn't have
@@ -89,6 +89,40 @@ def _summarize_cart(cart: dict[str, Any]) -> dict[str, Any]:
         "can_checkout": (cart.get("status") or {}).get("canCheckout"),
         "checkout_requirements": (cart.get("status") or {}).get("checkoutRequirementsCopyText"),
         "items": items,
+    }
+
+
+def _price(hit: dict[str, Any], channel: str) -> dict[str, Any] | None:
+    """Pull the price block matching the channel, falling back to in-store."""
+    field = GROCERY_PRICE_FIELDS.get(channel, "price_inStore")
+    block = hit.get(field) or hit.get("price_inStore") or {}
+    if not block:
+        return None
+    return {"amount": block.get("amount"), "unit_price": block.get("unitPrice")}
+
+
+def _summarize_product(hit: dict[str, Any], channel: str = "instore") -> dict[str, Any]:
+    return {
+        "sku_id": hit.get("skuId"),
+        "name": hit.get("productName"),
+        "brand": hit.get("consumerBrandName"),
+        "pack_size": hit.get("packSize"),
+        "price": _price(hit, channel),
+        "sold_by_weight": hit.get("isSoldByWeight"),
+        "sell_by_unit": hit.get("onlineSellByUnit"),
+        "max_quantity": hit.get("maxQuantity"),
+        "is_available": hit.get("isAvailable"),
+        "category": (hit.get("categoryNodes") or {}).get("lvl2")
+        or (hit.get("categoryNodes") or {}).get("lvl0"),
+        "aisle": (hit.get("planogram") or {}).get("aisle"),
+        "tags": hit.get("filterTags") or [],
+        "has_offers": hit.get("hasOffers"),
+        "coupon_offer_ids": hit.get("digitalCouponsOfferIds") or [],
+        "rating": hit.get("averageStarRating"),
+        "review_count": hit.get("reviewCount"),
+        "url": f"https://www.wegmans.com/shop/product/{hit['slug']}"
+        if hit.get("slug")
+        else None,
     }
 
 
@@ -594,6 +628,90 @@ async def remove_from_cart(
         raise ValueError(f"No cart item with cart_item_id={cart_item_id!r}")
     updated = await client.patch_cart_item(target, quantity=0)
     return _summarize_cart(updated)
+
+
+@mcp.tool()
+async def search_groceries(
+    query: Annotated[str, Field(description="Product search text, e.g. 'organic whole milk'")],
+    limit: Annotated[int, Field(description="Max results (default 10)")] = 10,
+    fulfillment_type: Annotated[
+        str | None,
+        Field(description="store / pickup / delivery. Defaults to the session's current type."),
+    ] = None,
+    brand: Annotated[
+        str | None, Field(description="Restrict to a brand, e.g. 'Wegmans'")
+    ] = None,
+    organic_only: Annotated[bool, Field(description="Only items tagged Organic")] = False,
+) -> dict[str, Any]:
+    """Search the Wegmans grocery catalog (packaged goods, produce, dairy —
+    NOT the Meals2Go prepared-food menu, which is `list_menu_categories`).
+
+    Prices and availability are specific to the current store and channel.
+    Returns `sku_id` values for use with `get_grocery_product`.
+    """
+    client = _get_client()
+    extra = []
+    if brand:
+        safe = brand.replace('"', '')
+        extra.append(f'consumerBrandName:"{safe}"')
+    if organic_only:
+        extra.append('filterTags:"Organic"')
+
+    result = await client.search_grocery(
+        query,
+        limit=limit,
+        fulfillment_type=fulfillment_type,
+        extra_filters=" AND ".join(extra) if extra else None,
+    )
+    channel = client._grocery_channel(fulfillment_type)
+    return {
+        "query": query,
+        "store_id": client.store_id,
+        "channel": channel,
+        "total_matches": result.get("nbHits"),
+        "results": [_summarize_product(h, channel) for h in result.get("hits") or []],
+    }
+
+
+@mcp.tool()
+async def get_grocery_product(
+    sku_id: Annotated[str, Field(description="sku_id from search_groceries")],
+    fulfillment_type: Annotated[
+        str | None, Field(description="store / pickup / delivery")
+    ] = None,
+) -> dict[str, Any]:
+    """Get full detail for one grocery product: both channel prices, nutrition,
+    ingredients, allergens, and aisle location at the current store.
+    """
+    client = _get_client()
+    hit = await client.get_grocery_product(sku_id, fulfillment_type=fulfillment_type)
+    if hit is None:
+        raise ValueError(
+            f"No product with sku_id={sku_id!r} at store {client.store_id}. "
+            "It may not be carried at this store — try search_groceries."
+        )
+    channel = client._grocery_channel(fulfillment_type)
+    detail = _summarize_product(hit, channel)
+    detail.update({
+        "upc": hit.get("upc"),
+        "description": hit.get("productDescription"),
+        "ingredients": hit.get("ingredients"),
+        "allergens": hit.get("allergensAndWarnings"),
+        "nutrition": hit.get("nutrition"),
+        "instructions": hit.get("instructions"),
+        "shelf": (hit.get("planogram") or {}).get("shelf"),
+        "ebt_eligible": hit.get("ebtEligible"),
+        "min_age_to_buy": hit.get("requiredMinimumAgeToBuy"),
+        "prices_by_channel": {
+            name: {
+                "amount": (hit.get(field) or {}).get("amount"),
+                "unit_price": (hit.get(field) or {}).get("unitPrice"),
+            }
+            for name, field in GROCERY_PRICE_FIELDS.items()
+            if hit.get(field)
+        },
+    })
+    return detail
 
 
 def main() -> None:

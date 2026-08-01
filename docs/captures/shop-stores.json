@@ -1,0 +1,291 @@
+{
+  "_note": "Trimmed capture of GET https://www.wegmans.com/api/stores. Full response is a bare array of 114 stores; 3 kept here for shape reference. storeNumber matches the Meals2Go locationId.",
+  "total_stores": 114,
+  "sample": [
+    {
+      "hasPickup": true,
+      "iwsLongitude": -76.050638,
+      "iwsName": "Liquor City",
+      "storeNumber": 1,
+      "stateAbbreviation": "NY",
+      "zones": "SYRACUSE",
+      "iwsCity": "Fayetteville",
+      "ecommerceOpeningDate": "2020-01-14T00:00:00Z",
+      "iwsZip": "13066",
+      "iwsPhone": "315-449-1818",
+      "openingDate": "2006-08-27T00:00:00Z",
+      "city": "Liverpool",
+      "name": "John Glenn",
+      "iwsEmail": "winemerchandisingmanager@liquorcitywineandspirits.com;winemanager@liquorcitywineandspirits.com",
+      "phoneNumber": "315-546-1200",
+      "latitude": 43.13316,
+      "zip": "13090",
+      "openState": "Open",
+      "iwsImage": "https://shop.wegmans.com/images/liquor_city.68c06432.png",
+      "iwsStoreNumber": 15,
+      "streetAddress": "7519 Oswego Road",
+      "aislePositionMapping": "{\"See Store Associate\":100,\"Outside Entranceway\":200,\"Front Vestibule\":300,\"Inside Entranceway\":400,\"Produce\":500,\"Floral\":600,\"Bakery - Artisan Bread and Rolls\":700,\"Bakery - Non-Refrigerated Desserts\":800,\"Bakery - Refrigerated Desserts\":900,\"Fresh Bakery\":1000,\"Prepared Foods\":1100,\"Deli\":1200,\"Cheese Shop\":1300,\"Seafood\":1400,\"Meat Department\":1500,\"Dairy\":1600,\"Dairy1\":1700,\"Dairy1A\":1800,\"Dairy1B\":1900,\"Dairy 1\":2000,\"Dairy 1A\":2100,\"Dairy 1B\":2200,\"Dairy2\":2300,\"Dairy2A\":2400,\"Dairy2B\":2500,\"Dairy 2\":2600,\"Dairy 2A\":2700,\"Dairy 2B\":2800,\"Dairy3\":2900,\"Dairy3A\":3000,\"Dairy3B\":3100,\"Dairy 3\":3200,\"Dairy 3A\":3300,\"Dairy 3B\":3400,\"Dairy4\":3500,\"Dairy4A\":3600,\"Dairy4B\":3700,\"Dairy 4\":3800,\"Dairy 4A\":3900,\"Dairy 4B\":4000,\"Dairy5\":4100,\"Dairy5A\":4200,\"Dairy5B\":4300,\"Dairy 5\":4400,\"Dairy 5A\":4500,\"Dairy 5B\":4600,\"Dairy6\":4700,\"Dairy6A\":4800,\"Dairy6B\":4900,\"Dairy 6\":5000,\"Dairy 6A\":5100,\"Dairy 6B\":5200,\"Dairy7\":5300,\"Dairy7A\":5400,\"Dairy7B\":5500,\"Dairy 7\":5600,\"Dairy 7A\":5700,\"Dairy 7B\":5800,\"Dairy8\":5900,\"Dairy8A\":6000,\"Dairy8B\":6100,\"Dairy 8\":6200,\"Dairy 8A\":6300,\"Dairy 8B\":6400,\"Dairy - Eggs\":6500,\"Pharmacy\":6600,\"01\":6700,\"01A\":6800,\"01B\":6900,\"01C\":7000,\"02\":7100,\"02A\":7200,\"02B\":7300,\"02C\":7400,\"03\":7500,\"03A\":7600,\"03B\":7700,\"03C\":7800,\"04\":7900,\"04A\":8000,\"04B\":8100,\"04C\":8200,\"05\":8300,\"05A\":8400,\"05B\":8500,\"05C\":8600,\"06\":8700,\"06A\":8800,\"06B\":8900,\"06C\":9000,\"07\":9100,\"07A\":9200,\"07B\":9300,\"07C\":9400,\"08\":9500,\"08A\":9600,\"08B\":9700,\"08C\":9800,\"09\":9900,\"09A\":10000,\"09B\":10100,\"09C\":10200,\"10\":10300,\"10A\":10400,\"10B\":10500,\"10C\":10600,\"11\":10700,\"11A\":10800,\"11B\":10900,\"11C\":11000,\"12\":11100,\"12A\":11200,\"12B\":11300,\"12C\":11400,\"13\":11500,\"13A\":11600,\"13B\":11700,\"13C\":11800,\"14\":11900,\"14A\":12000,\"14B\":12100,\"14C\":12200,\"15\":12300,\"15A\":12400,\"15B\":12500,\"15C\":12600,\"16\":12700,\"16A\":12800,\"16B\":12900,\"16C\":13000,\"17\":13100,\"17A\":13200,\"17B\":13300,\"17C\":13400,\"18\":13500,\"18A\":13600,\"18B\":13700,\"18C\":13800,\"19\":13900,\"19A\":14000,\"19B\":14100,\"19C\":14200,\"20\":14300,\"20A\":14400,\"20B\":14500,\"20C\":14600,\"21\":14700,\"21A\":14800,\"21B\":14900,\"21C\":15000,\"22\":15100,\"22A\":15200,\"22B\":15300,\"22C\":15400,\"23\":15500,\"23A\":15600,\"23B\":15700,\"23C\":15800,\"24\":15900,\"24A\":16000,\"24B\":16100,\"24C\":16200,\"25\":16300,\"25A\":16400,\"25B\":16500,\"25C\":16600,\"26\":16700,\"26A\":16800,\"26B\":16900,\"26C\":17000,\"27\":17100,\"27A\":17200,\"27B\":17300,\"27C\":17400,\"28\":17500,\"28A\":17600,\"28B\":17700,\"28C\":17800,\"29\":17900,\"29A\":18000,\"29B\":18100,\"29C\":18200,\"30\":18300,\"30A\":18400,\"30B\":18500,\"30C\":18600,\"Beer Shop\":18700,\"Beer 1\":18705,\"Beer - Walk-In Cooler\":18710,\"Beer 2\":18715,\"Beer 3\":18720,\"Beer 4\":18725,\"Beer 5\":18730,\"Beer 6\":18735,\"Beer 7\":18740,\"Beer 8\":18745,\"Frozen Foods\":18800,\"Frozen 1\":18900,\"Frozen 2A\":19000,\"Frozen 2B\":19100,\"Frozen 3A\":19200,\"Frozen 3B\":19300,\"Frozen 4\":19400,\"Frozen 4A\":19500,\"Frozen 4B\":19600,\"Frozen 5\":19700,\"Front End Register Area\":19800}",
+      "cs_uid": "",
+      "iwsStateAbbreviation": "NY",
+      "longitude": -76.2232,
+      "hasPharmacy": true,
+      "iwsLatitude": 43.033266,
+      "iwsStreetAddress": "6793 East Genesee St",
+      "hasECommerce": true,
+      "hasDelivery": true,
+      "pointOfSaleIndicator": "F",
+      "key": "1-JOHN-GLENN",
+      "id": 1,
+      "position": {
+        "lat": 43.13316,
+        "lng": -76.2232
+      },
+      "alcoholTypesForSale": [
+        "Beer",
+        "Spirits",
+        "Wine"
+      ],
+      "iwsLogo": "",
+      "iwsLogoAsset": [
+        {
+          "assetId": "urn:aaid:aem:970286ed-ddf3-4942-ac6d-b27b398fc00b",
+          "height": 468,
+          "name": "liquor_city.68c06432.png",
+          "size": "72 KB",
+          "type": "image",
+          "url": "https://images.wegmans.com/is/image/wegmanscsprod/liquor_city.68c06432",
+          "width": 468
+        }
+      ],
+      "sellsAlcohol": true,
+      "slug": "john-glenn-ny",
+      "wineStoreRef": {
+        "ACL": {},
+        "_in_progress": false,
+        "_version": 6,
+        "created_at": "2023-11-28T04:29:07.847Z",
+        "created_by": "blt9cbaa633cba3585e",
+        "locale": "en-us",
+        "publish_details": {
+          "environment": "blt2499c7a17f212e77",
+          "locale": "en-us",
+          "time": "2026-05-18T16:33:48.655Z",
+          "user": "blt834118c93a5d0ecf"
+        },
+        "tags": [],
+        "title": "Liquor City",
+        "uid": "blt4616638f6281d9da",
+        "updated_at": "2026-05-18T16:33:41.697Z",
+        "updated_by": "blt834118c93a5d0ecf",
+        "store_number": 15,
+        "description": "Shop fine wines, liquor, and more with one of the widest selections in the country.",
+        "url": "https://liquorcitywineandspirits.com/",
+        "image": [],
+        "image_src": "https://images.wegmans.com/is/image/wegmans/LiquorCity-nearby",
+        "logo": [
+          {
+            "assetId": "urn:aaid:aem:970286ed-ddf3-4942-ac6d-b27b398fc00b",
+            "height": 468,
+            "name": "liquor_city.68c06432.png",
+            "size": "72 KB",
+            "type": "image",
+            "url": "https://images.wegmans.com/is/image/wegmanscsprod/liquor_city.68c06432",
+            "width": 468
+          }
+        ],
+        "logo_src": "",
+        "pickup_instructions": {
+          "content": {
+            "_version": 6,
+            "attrs": {},
+            "children": [
+              {
+                "attrs": {},
+                "children": [
+                  {
+                    "text": "Please follow signage to pick up."
+                  }
+                ],
+                "type": "p",
+                "uid": "e7808c78cf614657b1231eba08b9426f"
+              }
+            ],
+            "type": "doc",
+            "uid": "46715cd27c9c4b3cac6a6752d0478123"
+          },
+          "image": {
+            "alt": "",
+            "asset": [
+              {
+                "assetId": "urn:aaid:aem:e8c6b7d6-87fa-47c7-a866-63e20feb26e2",
+                "height": 331,
+                "name": "LiquorCity-nearby.jpg",
+                "size": "190 KB",
+                "type": "image",
+                "url": "https://images.wegmans.com/is/image/wegmans/LiquorCity-nearby",
+                "width": 800
+              }
+            ],
+            "source_external": ""
+          }
+        },
+        "_content_type_uid": "store_wine_store"
+      }
+    },
+    {
+      "name": "Fairfax",
+      "openState": "Open",
+      "hasPickup": true,
+      "storeNumber": 16,
+      "stateAbbreviation": "VA",
+      "zones": "VIRGINIA",
+      "ecommerceOpeningDate": "2020-01-14T00:00:00Z",
+      "openingDate": "2005-02-06T00:00:00Z",
+      "city": "Fairfax",
+      "phoneNumber": "703-653-1600",
+      "latitude": 38.85101,
+      "zip": "22030",
+      "streetAddress": "11620 Monument Drive",
+      "aislePositionMapping": "{\"See Store Associate\":100,\"Outside Entranceway\":200,\"Front Vestibule\":300,\"Inside Entranceway\":400,\"Produce\":500,\"Floral\":600,\"Cheese Shop\":700,\"Bakery - Artisan Bread and Rolls\":800,\"Bakery - Non-Refrigerated Desserts\":900,\"Bakery - Refrigerated Desserts\":1000,\"Fresh Bakery\":1100,\"Deli\":1200,\"Catering\":1300,\"Prepared Foods\":1400,\"Seafood\":1500,\"Meat Department\":1600,\"Packaged Bread\":1700,\"Dairy\":1800,\"Dairy1\":1900,\"Dairy1A\":2000,\"Dairy1B\":2100,\"Dairy 1\":2200,\"Dairy 1A\":2300,\"Dairy 1B\":2400,\"Dairy2\":2500,\"Dairy2A\":2600,\"Dairy2B\":2700,\"Dairy 2\":2800,\"Dairy 2A\":2900,\"Dairy 2B\":3000,\"Dairy3\":3100,\"Dairy3A\":3200,\"Dairy3B\":3300,\"Dairy 3\":3400,\"Dairy 3A\":3500,\"Dairy 3B\":3600,\"Dairy4\":3700,\"Dairy4A\":3800,\"Dairy4B\":3900,\"Dairy 4\":4000,\"Dairy 4A\":4100,\"Dairy 4B\":4200,\"Dairy5\":4300,\"Dairy5A\":4400,\"Dairy5B\":4500,\"Dairy 5\":4600,\"Dairy 5A\":4700,\"Dairy 5B\":4800,\"Dairy6\":4900,\"Dairy6A\":5000,\"Dairy6B\":5100,\"Dairy 6\":5200,\"Dairy 6A\":5300,\"Dairy 6B\":5400,\"Dairy7\":5500,\"Dairy7A\":5600,\"Dairy7B\":5700,\"Dairy 7\":5800,\"Dairy 7A\":5900,\"Dairy 7B\":6000,\"Dairy8\":6100,\"Dairy8A\":6200,\"Dairy8B\":6300,\"Dairy 8\":6400,\"Dairy 8A\":6500,\"Dairy 8B\":6600,\"Dairy - Eggs\":6700,\"01\":6800,\"01A\":6900,\"01B\":7000,\"01C\":7100,\"02\":7200,\"02A\":7300,\"02B\":7400,\"02C\":7500,\"Pharmacy\":7600,\"03\":7700,\"03A\":7800,\"03B\":7900,\"03C\":8000,\"04\":8100,\"04A\":8200,\"04B\":8300,\"04C\":8400,\"05\":8500,\"05A\":8600,\"05B\":8700,\"05C\":8800,\"06\":8900,\"06A\":9000,\"06B\":9100,\"06C\":9200,\"07\":9300,\"07A\":9400,\"07B\":9500,\"07C\":9600,\"08\":9700,\"08A\":9800,\"08B\":9900,\"08C\":10000,\"09\":10100,\"09A\":10200,\"09B\":10300,\"09C\":10400,\"10\":10500,\"10A\":10600,\"10B\":10700,\"10C\":10800,\"Frozen Foods\":10900,\"11\":11000,\"11A\":11100,\"11B\":11200,\"11C\":11300,\"12\":11400,\"12A\":11500,\"12B\":11600,\"12C\":11700,\"13\":11800,\"13A\":11900,\"13B\":12000,\"13C\":12100,\"14\":12200,\"14A\":12300,\"14B\":12400,\"14C\":12500,\"15\":12600,\"15A\":12700,\"15B\":12800,\"15C\":12900,\"16\":13000,\"16A\":13100,\"16B\":13200,\"16C\":13300,\"17\":13400,\"17A\":13500,\"17B\":13600,\"17C\":13700,\"18\":13800,\"18A\":13900,\"18B\":14000,\"18C\":14100,\"19\":14200,\"19A\":14300,\"19B\":14400,\"19C\":14500,\"20\":14600,\"20A\":14700,\"20B\":14800,\"20C\":14900,\"21\":15000,\"21A\":15100,\"21B\":15200,\"21C\":15300,\"22\":15400,\"22A\":15500,\"22B\":15600,\"22C\":15700,\"23\":15800,\"23A\":15900,\"23B\":16000,\"23C\":16100,\"24\":16200,\"24A\":16300,\"24B\":16400,\"24C\":16500,\"25\":16600,\"25A\":16700,\"25B\":16800,\"25C\":16900,\"26\":17000,\"26A\":17100,\"26B\":17200,\"26C\":17300,\"27\":17400,\"27A\":17500,\"27B\":17600,\"27C\":17700,\"28\":17800,\"28A\":17900,\"28B\":18000,\"28C\":18100,\"29\":18200,\"29A\":18300,\"29B\":18400,\"29C\":18500,\"30\":18600,\"30A\":18700,\"30B\":18800,\"30C\":18900,\"Wine\":19000,\"Beer Shop\":19100,\"Beer 1\":19105,\"Beer - Walk-In Cooler\":19110,\"Beer 2\":19115,\"Beer 3\":19120,\"Beer 4\":19125,\"Beer 5\":19130,\"Beer 6\":19135,\"Beer 7\":19140,\"Beer 8\":19145,\"Front End Register Area\":19200}",
+      "cs_uid": "",
+      "longitude": -77.34734,
+      "hasPharmacy": true,
+      "hasECommerce": true,
+      "hasDelivery": true,
+      "pointOfSaleIndicator": "F",
+      "key": "16-FAIRFAX",
+      "id": 16,
+      "position": {
+        "lat": 38.85101,
+        "lng": -77.34734
+      },
+      "alcoholTypesForSale": [
+        "Beer",
+        "Cocktails",
+        "Wine"
+      ],
+      "sellsAlcohol": true,
+      "slug": "fairfax-va"
+    },
+    {
+      "hasPickup": true,
+      "iwsLongitude": -78.8829,
+      "iwsName": "Amherst St. Wine & Liquor",
+      "storeNumber": 91,
+      "stateAbbreviation": "NY",
+      "zones": "BUFFALO",
+      "iwsCity": "Buffalo",
+      "ecommerceOpeningDate": "2020-01-14T00:00:00Z",
+      "iwsZip": "14207",
+      "iwsPhone": "716-710-5940",
+      "openingDate": "1997-11-09T00:00:00Z",
+      "city": "Buffalo",
+      "name": "Amherst St",
+      "iwsEmail": "wineconsultant@amherstwineandliquor.com;winemanager@amherstwineandliquor.com",
+      "phoneNumber": "716-877-0500",
+      "latitude": 42.9387,
+      "zip": "14207",
+      "openState": "Open",
+      "iwsImage": "https://shop.wegmans.com/images/amherst.485bd4e5.png",
+      "iwsStoreNumber": 172,
+      "streetAddress": "601 Amherst Street",
+      "aislePositionMapping": "{\"See Store Associate\":100,\"Outside Entranceway\":200,\"Front Vestibule\":300,\"Inside Entranceway\":400,\"Produce\":500,\"Floral\":600,\"Bakery - Artisan Bread and Rolls\":700,\"Bakery - Non-Refrigerated Desserts\":800,\"Bakery - Refrigerated Desserts\":900,\"Fresh Bakery\":1000,\"Prepared Foods\":1100,\"Seafood\":1200,\"Cheese Shop\":1300,\"Meat Department\":1400,\"Deli\":1500,\"Dairy\":1600,\"Dairy1\":1700,\"Dairy1A\":1800,\"Dairy1B\":1900,\"Dairy 1\":2000,\"Dairy 1A\":2100,\"Dairy 1B\":2200,\"Dairy2\":2300,\"Dairy2A\":2400,\"Dairy2B\":2500,\"Dairy 2\":2600,\"Dairy 2A\":2700,\"Dairy 2B\":2800,\"Dairy3\":2900,\"Dairy3A\":3000,\"Dairy3B\":3100,\"Dairy 3\":3200,\"Dairy 3A\":3300,\"Dairy 3B\":3400,\"Dairy4\":3500,\"Dairy4A\":3600,\"Dairy4B\":3700,\"Dairy 4\":3800,\"Dairy 4A\":3900,\"Dairy 4B\":4000,\"Dairy5\":4100,\"Dairy5A\":4200,\"Dairy5B\":4300,\"Dairy 5\":4400,\"Dairy 5A\":4500,\"Dairy 5B\":4600,\"Dairy6\":4700,\"Dairy6A\":4800,\"Dairy6B\":4900,\"Dairy 6\":5000,\"Dairy 6A\":5100,\"Dairy 6B\":5200,\"Dairy7\":5300,\"Dairy7A\":5400,\"Dairy7B\":5500,\"Dairy 7\":5600,\"Dairy 7A\":5700,\"Dairy 7B\":5800,\"Dairy8\":5900,\"Dairy8A\":6000,\"Dairy8B\":6100,\"Dairy 8\":6200,\"Dairy 8A\":6300,\"Dairy 8B\":6400,\"Dairy - Eggs\":6500,\"Pharmacy\":6600,\"01\":6700,\"01A\":6800,\"01B\":6900,\"01C\":7000,\"02\":7100,\"02A\":7200,\"02B\":7300,\"02C\":7400,\"03\":7500,\"03A\":7600,\"03B\":7700,\"03C\":7800,\"04\":7900,\"04A\":8000,\"04B\":8100,\"04C\":8200,\"05\":8300,\"05A\":8400,\"05B\":8500,\"05C\":8600,\"06\":8700,\"06A\":8800,\"06B\":8900,\"06C\":9000,\"07\":9100,\"07A\":9200,\"07B\":9300,\"07C\":9400,\"08\":9500,\"08A\":9600,\"08B\":9700,\"08C\":9800,\"09\":9900,\"09A\":10000,\"09B\":10100,\"09C\":10200,\"10\":10300,\"10A\":10400,\"10B\":10500,\"10C\":10600,\"11\":10700,\"11A\":10800,\"11B\":10900,\"11C\":11000,\"12\":11100,\"12A\":11200,\"12B\":11300,\"12C\":11400,\"13\":11500,\"13A\":11600,\"13B\":11700,\"13C\":11800,\"14\":11900,\"14A\":12000,\"14B\":12100,\"14C\":12200,\"15\":12300,\"15A\":12400,\"15B\":12500,\"15C\":12600,\"16\":12700,\"16A\":12800,\"16B\":12900,\"16C\":13000,\"17\":13100,\"17A\":13200,\"17B\":13300,\"17C\":13400,\"18\":13500,\"18A\":13600,\"18B\":13700,\"18C\":13800,\"19\":13900,\"19A\":14000,\"19B\":14100,\"19C\":14200,\"20\":14300,\"20A\":14400,\"20B\":14500,\"20C\":14600,\"21\":14700,\"21A\":14800,\"21B\":14900,\"21C\":15000,\"Beer Shop\":15100,\"Beer 1\":15105,\"Beer - Walk-In Cooler\":15110,\"Beer 2\":15115,\"Beer 3\":15120,\"Beer 4\":15125,\"Beer 5\":15130,\"Beer 6\":15135,\"Beer 7\":15140,\"Beer 8\":15145,\"22\":15200,\"22A\":15300,\"22B\":15400,\"22C\":15500,\"23\":15600,\"23A\":15700,\"23B\":15800,\"23C\":15900,\"24\":16000,\"24A\":16100,\"24B\":16200,\"24C\":16300,\"25\":16400,\"25A\":16500,\"25B\":16600,\"25C\":16700,\"26\":16800,\"26A\":16900,\"26B\":17000,\"26C\":17100,\"27\":17200,\"27A\":17300,\"27B\":17400,\"27C\":17500,\"28\":17600,\"28A\":17700,\"28B\":17800,\"28C\":17900,\"29\":18000,\"29A\":18100,\"29B\":18200,\"29C\":18300,\"30\":18400,\"30A\":18500,\"30B\":18600,\"30C\":18700,\"Frozen Foods\":18800,\"Frozen 1\":18900,\"Frozen 2\":19000,\"Frozen 3\":19100,\"Frozen 4\":19200,\"Frozen 5\":19300,\"Frozen 6\":19400,\"Frozen 7\":19500,\"Frozen 8\":19600,\"Front End Register Area\":19700}",
+      "cs_uid": "",
+      "iwsStateAbbreviation": "NY",
+      "longitude": -78.8829,
+      "hasPharmacy": true,
+      "iwsLatitude": 42.9387,
+      "iwsStreetAddress": "601 Amherst Street",
+      "hasECommerce": true,
+      "hasDelivery": true,
+      "pointOfSaleIndicator": "F",
+      "key": "91-AMHERST-ST",
+      "id": 91,
+      "position": {
+        "lat": 42.9387,
+        "lng": -78.8829
+      },
+      "alcoholTypesForSale": [
+        "Beer",
+        "Spirits",
+        "Wine"
+      ],
+      "iwsLogo": "",
+      "iwsLogoAsset": [
+        {
+          "assetId": "urn:aaid:aem:45c60f30-9c0a-4b2b-a2d1-f934db994271",
+          "height": 468,
+          "name": "amherst.485bd4e5.png",
+          "size": "84 KB",
+          "type": "image",
+          "url": "https://images.wegmans.com/is/image/wegmanscsprod/amherst.485bd4e5",
+          "width": 468
+        }
+      ],
+      "sellsAlcohol": true,
+      "slug": "amherst-st-ny",
+      "wineStoreRef": {
+        "ACL": {},
+        "_in_progress": false,
+        "_version": 4,
+        "created_at": "2023-11-28T04:29:07.820Z",
+        "created_by": "blt9cbaa633cba3585e",
+        "locale": "en-us",
+        "publish_details": {
+          "environment": "blt2499c7a17f212e77",
+          "locale": "en-us",
+          "time": "2025-04-03T17:02:47.947Z",
+          "user": "bltb7e919cb54333d40"
+        },
+        "tags": [],
+        "title": "Amherst St Wine & Liquor",
+        "uid": "blt77e30d8a20c53d81",
+        "updated_at": "2025-04-03T17:02:44.269Z",
+        "updated_by": "bltb7e919cb54333d40",
+        "store_number": 172,
+        "description": "Shop fine wines, liquor, and more with one of the widest selections in the country.",
+        "url": "https://www.amherstwineandliquor.com/",
+        "image": [],
+        "image_src": "https://images.wegmans.com/is/image/wegmans/Amherst-nearby-3",
+        "logo": [
+          {
+            "assetId": "urn:aaid:aem:45c60f30-9c0a-4b2b-a2d1-f934db994271",
+            "height": 468,
+            "name": "amherst.485bd4e5.png",
+            "size": "84 KB",
+            "type": "image",
+            "url": "https://images.wegmans.com/is/image/wegmanscsprod/amherst.485bd4e5",
+            "width": 468
+          }
+        ],
+        "logo_src": "",
+        "pickup_instructions": {
+          "content": {
+            "_version": 4,
+            "attrs": {},
+            "children": [
+              {
+                "attrs": {},
+                "children": [
+                  {
+                    "text": ""
+                  }
+                ],
+                "type": "p",
+                "uid": "7452437f6a4a46ef9b938c593592761c"
+              }
+            ],
+            "type": "doc",
+            "uid": "139441b6f82a444fa3604bfd68b9e453"
+          },
+          "image": {
+            "alt": "",
+            "asset": [],
+            "source_external": ""
+          }
+        },
+        "_content_type_uid": "store_wine_store"
+      }
+    }
+  ]
+}

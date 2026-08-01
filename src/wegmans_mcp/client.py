@@ -16,7 +16,34 @@ from .auth import WegmansAuth
 
 WEGAPI_BASE = "https://wegapi.azure-api.net"
 WEGMANS_CLOUD_BASE = "https://api.digitaldevelopment.wegmans.cloud"
+WEGMANS_WWW_BASE = "https://www.wegmans.com"
 APIM_SUBSCRIPTION_KEY = "5197901a4fb04988a35800505266ef1c"
+
+# The grocery catalog on wegmans.com is served by Algolia, not by a Wegmans
+# API. The app id and search-only key are embedded in the public page bundle.
+ALGOLIA_APP_ID = "QGPPR19V8V"
+ALGOLIA_SEARCH_KEY = "9a10b1401634e9a6e55161c3a60c200d"
+ALGOLIA_BASE = f"https://{ALGOLIA_APP_ID.lower()}-dsn.algolia.net"
+ALGOLIA_PRODUCTS_INDEX = "products"
+
+# Grocery channels. The Algolia field is spelled `fulfilmentType` (single 'l'),
+# unlike the Meals2Go `fulfillmentType`.
+GROCERY_CHANNELS: dict[str, str] = {
+    "store": "instore",
+    "carryout": "instore",
+    "instore": "instore",
+    "pickup": "pickup",
+    "curbside": "pickup",
+    "delivery": "delivery",
+}
+
+# Only two price blocks exist per product. Pickup is priced at the in-store
+# rate; delivery carries a markup (~15% on observed items).
+GROCERY_PRICE_FIELDS: dict[str, str] = {
+    "instore": "price_inStore",
+    "pickup": "price_inStore",
+    "delivery": "price_delivery",
+}
 CART_API_VERSION = "2020-10-07"
 KITTING_API_VERSION = "2021-02-01"
 LOCATION_API_VERSION = "2020-09-09"
@@ -251,6 +278,87 @@ class WegmansClient:
             return r.json() or {}
         except Exception:
             return {}
+
+    # ---- Grocery catalog (wegmans.com / Algolia) -------------------------
+
+    def _grocery_channel(self, fulfillment_type: str | None = None) -> str:
+        key = (fulfillment_type or self.fulfillment_type).lower().strip()
+        if key not in GROCERY_CHANNELS:
+            raise ValueError(
+                f"Unknown fulfillment type {fulfillment_type!r}. "
+                f"Expected one of: {sorted(set(GROCERY_CHANNELS))}"
+            )
+        return GROCERY_CHANNELS[key]
+
+    async def search_grocery(
+        self,
+        query: str,
+        limit: int = 10,
+        fulfillment_type: str | None = None,
+        extra_filters: str | None = None,
+        page: int = 0,
+    ) -> dict[str, Any]:
+        """Search the grocery catalog for the current store.
+
+        Anonymous — the catalog index needs no Bearer token, only the public
+        search key. Availability and price are per store and per channel, so
+        both are baked into the Algolia filter rather than passed as a query.
+        """
+        channel = self._grocery_channel(fulfillment_type)
+        filters = (
+            f"storeNumber:{self.store_id} AND fulfilmentType:{channel} "
+            f"AND excludeFromWeb:false AND isSoldAtStore:true"
+        )
+        if extra_filters:
+            filters = f"{filters} AND ({extra_filters})"
+
+        r = await self._http.post(
+            f"{ALGOLIA_BASE}/1/indexes/*/queries",
+            params={
+                "x-algolia-api-key": ALGOLIA_SEARCH_KEY,
+                "x-algolia-application-id": ALGOLIA_APP_ID,
+            },
+            json={"requests": [{
+                "indexName": ALGOLIA_PRODUCTS_INDEX,
+                "query": query,
+                "hitsPerPage": limit,
+                "page": page,
+                "filters": filters,
+            }]},
+            headers={"Content-Type": "application/json"},
+        )
+        r.raise_for_status()
+        return (r.json().get("results") or [{}])[0]
+
+    async def get_grocery_product(
+        self, sku_id: str, fulfillment_type: str | None = None
+    ) -> dict[str, Any] | None:
+        """Fetch one catalog product by SKU for the current store.
+
+        Index objects are keyed `{storeNumber}-{skuId}`, so this is an exact
+        lookup rather than a search.
+        """
+        channel = self._grocery_channel(fulfillment_type)
+        r = await self._http.post(
+            f"{ALGOLIA_BASE}/1/indexes/*/queries",
+            params={
+                "x-algolia-api-key": ALGOLIA_SEARCH_KEY,
+                "x-algolia-application-id": ALGOLIA_APP_ID,
+            },
+            json={"requests": [{
+                "indexName": ALGOLIA_PRODUCTS_INDEX,
+                "query": "",
+                "hitsPerPage": 1,
+                "filters": (
+                    f'objectID:"{self.store_id}-{sku_id}" '
+                    f"AND fulfilmentType:{channel}"
+                ),
+            }]},
+            headers={"Content-Type": "application/json"},
+        )
+        r.raise_for_status()
+        hits = (r.json().get("results") or [{}])[0].get("hits") or []
+        return hits[0] if hits else None
 
     # ---- Locations -------------------------------------------------------
 

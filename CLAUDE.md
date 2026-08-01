@@ -12,7 +12,7 @@ Tools, auth, and API quirks are documented in `docs/api-discovery.md`.
 - `src/wegmans_mcp/client.py` — async httpx client wrapping the
   `wegapi.azure-api.net` API surface (cart, kitting, locations, coupons,
   Google maps proxy). Holds the mutable `store_id` / `fulfillment_type`.
-- `src/wegmans_mcp/server.py` — FastMCP server exposing 13 tools. Uses
+- `src/wegmans_mcp/server.py` — FastMCP server exposing 15 tools. Uses
   a module-level singleton `_client` so state (store, fulfillment)
   persists across tool calls in a single MCP session.
 
@@ -47,6 +47,30 @@ Tools, auth, and API quirks are documented in `docs/api-discovery.md`.
   list of unsatisfied groups and their available options. Wegmans itself
   silently accepts under-configured items at $0 — validation prevents that.
 - **PATCH with `quantity: 0` removes** an item. There is no DELETE.
+
+## Two separate storefronts
+
+Meals2Go (prepared food) and wegmans.com (groceries) are different systems
+and the tools are not interchangeable:
+
+- **Prepared food** — `list_menu_categories` / `get_item_details` /
+  `add_to_cart`. Kit-based, auth required.
+- **Groceries** — `search_groceries` / `get_grocery_product`. SKU-based,
+  backed by Algolia, **no auth required**.
+
+`store_id` is shared across both (verified: 113 common IDs against the
+Meals2Go location list), so `set_fulfillment` applies to grocery lookups too.
+
+Grocery gotchas:
+- The Algolia field is **`fulfilmentType`** (one `l`) — Meals2Go's is
+  `fulfillmentType` (two). A misspelling returns unfiltered results
+  rather than erroring, so it silently reports items the store doesn't carry.
+- Always keep `excludeFromWeb:false AND isSoldAtStore:true` in the filter.
+- Pickup has no price block of its own; it bills at `price_inStore`.
+  Delivery runs ~15% higher. Quote the channel the user is actually using.
+- **There is no grocery cart yet** — the wegmans.com cart is auth-gated and
+  unmapped (see `docs/api-discovery.md`). Search can find items and prices;
+  it cannot add them to an order. Say so rather than implying a cart exists.
 
 ## Code conventions
 

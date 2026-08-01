@@ -1,0 +1,19 @@
+{
+  "url": "https://qgppr19v8v-dsn.algolia.net/1/indexes/*/queries?x-algolia-api-key=9a10b1401634e9a6e55161c3a60c200d&x-algolia-application-id=QGPPR19V8V",
+  "method": "POST",
+  "body": {
+    "requests": [
+      {
+        "indexName": "products",
+        "query": "organic whole milk",
+        "hitsPerPage": 5,
+        "page": 0,
+        "facets": [
+          "*"
+        ],
+        "maxValuesPerFacet": 1001,
+        "filters": "storeNumber:91 AND fulfilmentType:instore AND excludeFromWeb:false AND isSoldAtStore:true"
+      }
+    ]
+  }
+}

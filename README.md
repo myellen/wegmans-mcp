@@ -8,11 +8,21 @@ Let Claude run your Wegmans Meals2Go cart. Ask Claude things like:
 
 > "What's in my cart?"
 
+> "What does Wegmans charge for organic whole milk at the Amherst St. store?"
+
 Claude (in Claude Code, Claude Desktop, or any MCP-compatible client) gets
-13 tools for browsing the menu, finding stores, configuring fulfillment,
-managing cart items, naming them ("for Dad", "for Akanksha"), and clipping
-Shoppers Club coupons. It does **not** place the final order — you still
-hit Checkout yourself.
+15 tools for browsing the menu, finding stores, configuring fulfillment,
+managing cart items, naming them ("for Dad", "for Akanksha"), clipping
+Shoppers Club coupons, and searching the grocery catalog. It does **not**
+place the final order — you still hit Checkout yourself.
+
+**Prepared food vs. groceries.** Cart tools drive the *Meals2Go* cart
+(subs, pizza, wings). The two grocery tools — `search_groceries` and
+`get_grocery_product` — search the regular supermarket catalog for prices,
+pack sizes, aisles, dietary tags, and nutrition. Grocery search needs no
+login at all. There is **no grocery cart yet**: Claude can price out a
+shopping list and tell you what Wegmans carries, but can't add those items
+to an order.
 
 ## Setup (one-time, ~5 minutes)
 

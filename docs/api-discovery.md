@@ -194,6 +194,101 @@ required** for this backend, and no `X-Include-Auth` header.
   body is a JSON array of offer IDs, e.g. `[8280450]`. Bulk-supported.
   Returns 200 (body may be empty).
 
+## Grocery catalog (wegmans.com)
+
+Captured 2026-08-01. `shop.wegmans.com` now 302s to `www.wegmans.com` — the
+grocery storefront is a Next.js app on the main domain.
+
+**Product search is not a Wegmans API at all.** It's Algolia, queried
+directly from the browser with a search-only key embedded in the public page
+bundle. No Bearer token, no APIM key, no cookies — a plain server-side POST
+works, which is why `search_groceries` needs no login.
+
+| Field | Value |
+|---|---|
+| Algolia app id | `QGPPR19V8V` |
+| Search-only key | `9a10b1401634e9a6e55161c3a60c200d` |
+| Endpoint | `POST https://qgppr19v8v-dsn.algolia.net/1/indexes/*/queries` |
+| Index | `products` |
+
+Request body is `{"requests": [{indexName, query, hitsPerPage, page, filters}]}`.
+
+### Store and channel live in the filter string, not the query
+
+Every product is indexed **once per store per channel**, keyed
+`objectID = "{storeNumber}-{skuId}"`. Availability and price are therefore
+properties of the filter, not of a lookup parameter:
+
+```
+storeNumber:91 AND fulfilmentType:instore
+  AND excludeFromWeb:false AND isSoldAtStore:true
+```
+
+- **`fulfilmentType` is spelled with one `l`** here, unlike Meals2Go's
+  `fulfillmentType`. Misspelling it silently returns unfiltered results
+  rather than erroring.
+- Omitting `excludeFromWeb:false AND isSoldAtStore:true` surfaces products
+  the store doesn't actually carry.
+- Channel values are `instore` / `pickup` / `delivery`.
+
+**Store IDs are shared between the two backends.** Cross-checking the
+Meals2Go `locationId` list against `/api/stores` gives 113 common IDs with
+108 exact name matches; the 5 that differ are formatting only (`Amherst St.`
+vs `Amherst St`). So `store_id` set via `set_fulfillment` applies to both
+prepared food and groceries.
+
+### Pricing
+
+Only two price blocks exist — `price_inStore` and `price_delivery`. Pickup
+is billed at the in-store rate (there is no `price_pickup`). Delivery carries
+a markup: observed items ran ~15% over in-store ($3.99 → $4.59). Prices also
+vary by store: Organic Valley whole milk was $5.69 at store 91, $5.99 at 16.
+
+`price_inStoreLoyalty` / `price_deliveryLoyalty` exist but were empty on
+every item sampled; `digitalCouponsOfferIds` is the populated discount path
+and feeds directly into the existing `clip_coupons` tool.
+
+### Useful hit fields
+
+`skuId`, `productName`, `consumerBrandName`, `packSize`, `upc`,
+`isSoldByWeight`, `onlineSellByUnit`, `maxQuantity`, `filterTags`
+(Organic / Gluten Free / Kosher / Wegmans Brand), `wellnessKeys`,
+`planogram.aisle`, `categoryNodes.lvl0..lvl2`, `nutrition`, `ingredients`,
+`allergensAndWarnings`, `ebtEligible`, `requiredMinimumAgeToBuy`, `slug`
+(product URL is `/shop/product/{slug}`).
+
+`filterTags` is what makes dietary substitution work when converting a list
+from another chain.
+
+### Other anonymous endpoints (Next.js BFF on www.wegmans.com)
+
+- `GET /api/stores` — all 114 stores, richer than the Meals2Go location
+  list (`hasPickup`, `hasDelivery`, `hasPharmacy`, `sellsAlcohol`,
+  `aislePositionMapping`, store hours, pickup instructions).
+- `GET /api/stores/store-number/{n}` — one store.
+- `GET /api/categories/v3/instore/{storeNumber}?categoryKeys=[...]` —
+  category tree.
+
+### Grocery cart — NOT YET MAPPED
+
+The cart is fully auth-gated and could not be captured. Anonymously the
+product tile button is "add to **list**", which is client-side only and
+fires no API call; signed-out users get "Sign in to build a cart or list."
+
+The grocery SPA authenticates as a **different MSAL client** than Meals2Go
+(`azp` `38c78f8d-d124-4796-8430-1cd476d9a982`) requesting
+`Commerce.SignalR`, `InstacartConnect.*`, `Users.Profile.*`. Notably it
+**does** request `offline_access` (Meals2Go does not), so the grocery side
+may support proper refresh tokens.
+
+`Commerce.SignalR` + `InstacartConnect.Fulfillment` in the scope list
+suggests the grocery cart is (a) pushed over SignalR rather than a plain
+REST resource, and (b) fulfilled through Instacart Connect. Both need
+confirming against a live capture before writing any client code.
+
+To capture: re-run `scripts/setup_login.py` (it now warms wegmans.com as
+well), then drive an add-to-cart in the UI and record the traffic.
+
 ## Constants observed in this session
 
 | Name | Value |

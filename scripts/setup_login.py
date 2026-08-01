@@ -25,6 +25,7 @@ from playwright.async_api import async_playwright
 AUTH_FILE = Path("auth.json")
 ENV_FILE = Path(".env")
 LOGIN_URL = "https://www.meals2go.com/"
+SHOP_URL = "https://www.wegmans.com/"
 API_HOST_SUBSTRING = "wegapi.azure-api.net"
 B2C_ISSUER_SUBSTRING = "myaccount.wegmans.com"
 LOYALTY_URL_RE = re.compile(r"/loyalty/(\d+)")
@@ -95,6 +96,33 @@ async def main() -> int:
             if "loyalty_id" in loyalty_id:
                 break
             await asyncio.sleep(0.5)
+
+        # Warm the grocery side too. wegmans.com uses a different MSAL client
+        # than Meals2Go, so its tokens/cookies only land in storage state once
+        # that SPA has completed its own silent sign-in against the shared B2C
+        # session. Without this the saved state can order prepared food but
+        # not groceries.
+        print("Signing in to the grocery site (wegmans.com) ...")
+        try:
+            await page.goto(SHOP_URL, wait_until="domcontentloaded")
+            for _ in range(40):
+                await asyncio.sleep(0.5)
+                signed_in = await page.evaluate(
+                    """() => Object.keys(window.localStorage)
+                             .some(k => k.includes('login.windows')
+                                     || k.includes('msal')
+                                     || k.includes('accesstoken'))"""
+                )
+                if signed_in:
+                    break
+            else:
+                print(
+                    "Grocery-site sign-in didn't complete; grocery cart tools "
+                    "may need another run. Catalog search will still work.",
+                    file=sys.stderr,
+                )
+        except Exception as e:  # non-fatal: Meals2Go auth is already captured
+            print(f"Grocery-site warm-up failed ({e}).", file=sys.stderr)
 
         state = await context.storage_state()
         AUTH_FILE.write_text(json.dumps(state, indent=2))
