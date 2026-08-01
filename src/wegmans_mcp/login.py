@@ -33,6 +33,21 @@ def _noop_status(state: str, detail: str) -> None:  # pragma: no cover
     pass
 
 
+def _read_env_values(path: Path) -> dict[str, str]:
+    """Parse an existing simple .env into a dict (empty if absent/unreadable)."""
+    out: dict[str, str] = {}
+    try:
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            out[k.strip()] = v.strip().strip('"').strip("'")
+    except OSError:
+        pass
+    return out
+
+
 def write_env_var(path: Path, key: str, value: str) -> None:
     """Upsert KEY=VALUE in a simple .env file."""
     lines = path.read_text().splitlines() if path.exists() else []
@@ -223,18 +238,30 @@ async def run_login(
                 shop_auth_file.write_text(json.dumps(state, indent=2))
                 saved.append(str(shop_auth_file))
 
+            kept_store: int | None = None
             if env_file is not None:
                 wrote_env = False
                 if "id" in loyalty:
                     write_env_var(env_file, "WEGMANS_LOYALTY_ID", loyalty["id"])
                     wrote_env = True
-                if store.get("store_id"):
-                    write_env_var(env_file, "WEGMANS_STORE_ID", str(store["store_id"]))
-                    wrote_env = True
-                if store.get("fulfillment_type"):
-                    write_env_var(env_file, "WEGMANS_FULFILLMENT_TYPE",
-                                  store["fulfillment_type"])
-                    wrote_env = True
+
+                # A store the user deliberately chose outranks the account's
+                # own home store — re-logging in after a session expires must
+                # not silently move them back.
+                existing = _read_env_values(env_file)
+                user_chose = existing.get("WEGMANS_STORE_SOURCE") == "user"
+                user_store = existing.get("WEGMANS_STORE_ID")
+                if user_chose and user_store and str(user_store) != str(store.get("store_id")):
+                    kept_store = int(user_store) if str(user_store).isdigit() else None
+                else:
+                    if store.get("store_id"):
+                        write_env_var(env_file, "WEGMANS_STORE_ID",
+                                      str(store["store_id"]))
+                        wrote_env = True
+                    if store.get("fulfillment_type"):
+                        write_env_var(env_file, "WEGMANS_FULFILLMENT_TYPE",
+                                      store["fulfillment_type"])
+                        wrote_env = True
                 if wrote_env:
                     saved.append(str(env_file))
 
@@ -245,6 +272,8 @@ async def run_login(
                 "store_id": store.get("store_id"),
                 "store_name": store.get("store_name"),
                 "fulfillment_type": store.get("fulfillment_type"),
+                # Set when the user's remembered store beat the detected one.
+                "kept_store_id": kept_store,
                 "saved": saved,
             }
         finally:

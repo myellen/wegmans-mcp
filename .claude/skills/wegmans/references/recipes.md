@@ -67,6 +67,24 @@ selections = {
 }
 ```
 
+## Making a store the user's default
+
+"Make this my store" / "I shop at the Pittsford one now" → pass
+`remember=True`, which persists it for future sessions:
+
+```python
+stores = await search_stores(near="Pittsford NY")
+await set_fulfillment(store_id=stores[0]["store_id"],
+                      fulfillment_type="curbside", remember=True)
+```
+
+Check the `remembered` block in the response. If
+`effective_next_session` is `false`, the save happened but a store pinned
+in the MCP client config outranks it — relay the `warning` verbatim
+rather than telling the user it's set. Without `remember=True` the switch
+lasts only the current session, which is the right default for "price
+this at the Rochester store" style one-offs.
+
 ## Switching fulfillment to a different store
 
 ```python

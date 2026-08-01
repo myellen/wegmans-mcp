@@ -117,6 +117,9 @@ hand-roll your own.
 - **"Switch to <store name>."** or **"…near <zip>."**
   Call `search_stores(near="<zip or city>")`, find the right
   `store_id`, then `set_fulfillment(store_id=<id>, fulfillment_type="carryout|curbside|delivery")`.
+  For **"make this my store"** / "I shop there now", add `remember=True`
+  so it persists across sessions, and relay the `remembered.warning` if
+  `effective_next_session` comes back false.
 
 ## Pitfalls to skip past
 

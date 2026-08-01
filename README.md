@@ -114,8 +114,8 @@ Restart Claude Desktop.
 | Env var | Default | Purpose |
 |---|---|---|
 | `WEGMANS_AUTH_FILE` | `auth.json` (in the working dir) | Path to the saved login state |
-| `WEGMANS_STORE_ID` | auto-detected at login (falls back to `91`, Amherst St., Buffalo NY) | Default store number — override anytime via `set_fulfillment` |
-| `WEGMANS_FULFILLMENT_TYPE` | auto-detected at login (falls back to `store`) | Default fulfillment: `store` / `curbside` / `delivery` |
+| `WEGMANS_STORE_ID` | auto-detected at login (falls back to `91`, Amherst St., Buffalo NY) | Default store number. Prefer `set_fulfillment(..., remember=True)` — setting this here **outranks** the remembered value and blocks later changes |
+| `WEGMANS_FULFILLMENT_TYPE` | auto-detected at login (falls back to `store`) | Default fulfillment: `store` / `curbside` / `delivery`. Same precedence caveat |
 | `WEGMANS_LOYALTY_ID` | auto-detected by `setup_login.py` and saved to `.env` | Your Shoppers Club number. Set this manually only if auto-detection fails or you want to override. |
 
 To pass env vars when adding to Claude Code:
@@ -123,7 +123,6 @@ To pass env vars when adding to Claude Code:
 ```bash
 claude mcp add wegmans --scope user \
     -e WEGMANS_LOYALTY_ID=1234567 \
-    -e WEGMANS_STORE_ID=16 \
     -- uv --directory /path/to/wegmans-mcp run wegmans-mcp
 ```
 

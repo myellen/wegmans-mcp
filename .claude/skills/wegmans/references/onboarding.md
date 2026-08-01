@@ -109,13 +109,23 @@ tools appear in the next session.
 
 ## 5. Set their home store
 
-The server defaults to store 91 (Amherst St., Buffalo NY). Unless the
-user actually shops there, have them say something like "find my
-Wegmans near <their city/zip> and make it my store" — that runs
-`search_stores` + `set_fulfillment`. To make it permanent, set
-`WEGMANS_STORE_ID=<store_id>` in the `.env` or MCP config so every
-session starts there. Prices and availability are per-store, so skip
-this and everything will quote the wrong store.
+Login auto-detects the user's home store from their Wegmans account, so
+this is usually already right — check with `get_current_fulfillment`.
+
+To change it, have them say "find my Wegmans near <city/zip> and make it
+my store": that's `search_stores` + `set_fulfillment(..., remember=True)`,
+which persists the choice for future sessions. Check the `remembered`
+block in the response — if `effective_next_session` is `false`, something
+outranks the save; relay the `warning` instead of saying it's set.
+
+**Don't** set `WEGMANS_STORE_ID` in the MCP client config (Desktop
+connector settings, the server entry's `env` block, or `claude mcp add
+-e`). Client-config env outranks the saved value, so it permanently
+defeats every later "make this my store". Leave the bundle's "Home store
+number" field blank.
+
+Prices and availability are per-store, so a wrong store quotes wrong
+totals everywhere.
 
 ## 6. Sanity check
 

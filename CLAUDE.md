@@ -40,7 +40,14 @@ Tools, auth, and API quirks are documented in `docs/api-discovery.md`.
   context applies to the same items.
 - **No SET endpoint for fulfillment.** `fulfillmentType` (`store` /
   `curbside` / `delivery`) and `storeId` are passed as URL/query params
-  on each call. The `set_fulfillment` tool only updates in-process state.
+  on each call. The `set_fulfillment` tool only updates in-process state —
+  it never touches the customer's preference in the Wegmans app. With
+  `remember=True` it also writes `WEGMANS_STORE_ID` /
+  `WEGMANS_FULFILLMENT_TYPE` to this server's `.env` so the choice is the
+  default next session. Startup precedence is **client-config env > .env >
+  built-in default**, so a store pinned in the MCP client config shadows a
+  remembered one; `_remember_fulfillment` detects that and says so instead
+  of reporting a save that won't take effect.
 - **Echo-the-kit payload.** Add/PATCH cart-items takes the **whole kit
   definition** (from `GET /kitting/.../kits/{kitId}`) as `payload`. The
   caller mutates `isSelected`/`selectedQuantity` on chosen entries.

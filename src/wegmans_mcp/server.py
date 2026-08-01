@@ -30,9 +30,24 @@ for _k in ("WEGMANS_LOYALTY_ID", "WEGMANS_STORE_ID", "WEGMANS_FULFILLMENT_TYPE")
     if os.environ.get(_k) == "":
         del os.environ[_k]
 
-load_dotenv()
+# Snapshot what the MCP client config (or the launching shell) set, before
+# .env fills anything in. These outrank .env at startup, so a "remember my
+# store" save has to be able to tell the user when one would shadow it.
+_client_config_env: dict[str, str] = {
+    k: os.environ[k]
+    for k in ("WEGMANS_STORE_ID", "WEGMANS_FULFILLMENT_TYPE")
+    if os.environ.get(k)
+}
+
+# Order matters: python-dotenv never overwrites an already-set key, so the
+# FIRST file loaded wins. The .env beside the auth file is the one this
+# server writes (login detection, `set_fulfillment(remember=True)`), so it
+# must load before the bare load_dotenv() — which searches upward from this
+# module, not the CWD, and can otherwise pin a stale value from a repo
+# checkout. Real env vars still outrank both.
 if os.environ.get("WEGMANS_AUTH_FILE"):
     load_dotenv(Path(os.environ["WEGMANS_AUTH_FILE"]).parent / ".env")
+load_dotenv()
 
 mcp = FastMCP(
     "wegmans-mcp",
@@ -66,8 +81,11 @@ mcp = FastMCP(
         "judge auth state.\n\n"
         "Prices and availability are per store and per fulfillment type "
         "(delivery runs ~15% above in-store). Confirm the store with "
-        "get_current_fulfillment before quoting totals. This server never "
-        "places an order — the user always checks out themselves."
+        "get_current_fulfillment before quoting totals. To shop a different "
+        "Wegmans, use search_stores then set_fulfillment; add remember=True "
+        "when the user wants that store to be their default from now on. "
+        "This server never places an order — the user always checks out "
+        "themselves."
     ),
 )
 
@@ -243,17 +261,113 @@ async def set_fulfillment(
         str,
         Field(description="One of: 'store' (Carryout), 'curbside', 'delivery'. 'carryout' is accepted as an alias for 'store'."),
     ],
+    remember: Annotated[
+        bool,
+        Field(description="Also save this as the default for future sessions "
+                          "(use when the user says 'make this my store')"),
+    ] = False,
 ) -> dict[str, Any]:
     """Set the store + fulfillment context used by subsequent cart operations.
 
     Wegmans does not have a server-side SET — this just changes what the MCP
     server passes to the cart endpoints. It does NOT modify the customer's
     persisted preference in the web/mobile app.
+
+    Pass `remember=True` to also persist it locally as this server's default
+    for future sessions.
     """
     client = _get_client()
     new_state = client.set_fulfillment(store_id, fulfillment_type)
+    result: dict[str, Any] = {"applied": new_state}
+
     cart = await client.get_cart()
-    return {"applied": new_state, "cart": _summarize_cart(cart)}
+    result["cart"] = _summarize_cart(cart)
+
+    # Persist only after the round-trip succeeds — a failure here (expired
+    # session, bad store) must not leave .env rewritten while the caller is
+    # told the operation failed.
+    if remember:
+        result["remembered"] = _remember_fulfillment(
+            new_state["store_id"], new_state["fulfillment_type"]
+        )
+    return result
+
+
+def _env_file_path() -> Path:
+    """The .env this server owns — beside the auth file, absolute so the
+    write target and the reported path can't drift with the CWD."""
+    auth_path, _ = _auth_paths()
+    return (auth_path.parent / ".env").resolve()
+
+
+def _config_shadows(name: str, configured: str, value: str) -> bool:
+    """Would a client-config env var land somewhere other than `value`?
+
+    Startup runs these through int() / normalize_fulfillment(), so compare
+    the normalized forms — '091' and 'carryout' are not conflicts.
+    """
+    try:
+        if name == "WEGMANS_STORE_ID":
+            return int(configured) != int(value)
+        return normalize_fulfillment(configured) != normalize_fulfillment(value)
+    except ValueError:
+        return True  # unparseable pin: startup won't land on the saved value
+
+
+def _remember_fulfillment(store_id: int, fulfillment_type: str) -> dict[str, Any]:
+    """Persist the store/fulfillment default to the .env this server reads.
+
+    Two things can outrank that file at startup — an env var from the MCP
+    client config, or another .env earlier in the search path — so verify
+    rather than assuming, and say so when the save won't actually take.
+    """
+    from dotenv import dotenv_values, find_dotenv
+
+    from .login import write_env_var
+
+    env_file = _env_file_path()
+    pairs = (
+        ("WEGMANS_STORE_ID", str(store_id)),
+        ("WEGMANS_FULFILLMENT_TYPE", fulfillment_type),
+    )
+    for name, value in pairs:
+        write_env_var(env_file, name, value)
+    # Marks this as a deliberate choice so a later re-login's auto-detection
+    # doesn't quietly overwrite it with the account's own home store.
+    write_env_var(env_file, "WEGMANS_STORE_SOURCE", "user")
+    # Keep this process consistent with what future ones will read.
+    for name, value in pairs:
+        os.environ[name] = value
+
+    out: dict[str, Any] = {"saved_to": str(env_file), "effective_next_session": True}
+    blockers: list[str] = []
+    for name, value in pairs:
+        configured = _client_config_env.get(name)
+        if configured and _config_shadows(name, configured, value):
+            blockers.append(
+                f"{name}={configured!r} in the MCP client config (Claude "
+                "Desktop connector settings, or the server entry's `env` block)"
+            )
+
+    # Another .env can only outrank this one when it loads first — i.e. when
+    # WEGMANS_AUTH_FILE is unset, so startup never preloads our file.
+    if not os.environ.get("WEGMANS_AUTH_FILE"):
+        other = find_dotenv()
+        if other and Path(other).resolve() != env_file:
+            other_values = dotenv_values(other)
+            for name, value in pairs:
+                configured = other_values.get(name)
+                if configured and _config_shadows(name, configured, value):
+                    blockers.append(f"{name}={configured!r} in {other}")
+
+    if blockers:
+        out["effective_next_session"] = False
+        out["warning"] = (
+            "Saved, but " + " and ".join(blockers)
+            + " takes precedence at startup, so clear it there to make this "
+            "stick."
+        )
+    return out
 
 
 @mcp.tool()
@@ -904,26 +1018,33 @@ async def _run_login_background() -> None:
             except Exception:
                 pass
         load_dotenv(auth_path.parent / ".env")
-        if result.get("store_id"):
+        prev_fulfillment = prev.fulfillment_type if prev is not None else "store"
+        if result.get("kept_store_id"):
+            # A store the user explicitly remembered survives re-login.
+            _get_client().set_fulfillment(result["kept_store_id"], prev_fulfillment)
+        elif result.get("store_id"):
             # The login read the user's real home store off their account —
             # that beats both the built-in default and whatever this session
-            # happened to be pointing at.
+            # happened to be pointing at. Detection can yield a store without
+            # a method, so fall back to the session's fulfillment, not "store".
             _get_client().set_fulfillment(
                 result["store_id"],
-                result.get("fulfillment_type") or "store",
+                result.get("fulfillment_type") or prev_fulfillment,
             )
         elif prev is not None:
             # Nothing detected: keep the store/fulfillment the user had set
             # this session rather than bouncing them back to defaults.
-            _get_client().set_fulfillment(prev.store_id, prev.fulfillment_type)
+            _get_client().set_fulfillment(prev.store_id, prev_fulfillment)
         _login_status.update({
             "state": "done",
             "detail": None,
             "shop_ok": result.get("shop_ok"),
             "loyalty_id": result.get("loyalty_id"),
-            "store_id": result.get("store_id"),
+            "store_id": result.get("kept_store_id") or result.get("store_id"),
             "store_name": result.get("store_name"),
             "fulfillment_type": result.get("fulfillment_type"),
+            "kept_store_id": result.get("kept_store_id"),
+            "detected_store_id": result.get("store_id"),
             "saved": result.get("saved"),
         })
     except Exception as e:
@@ -983,6 +1104,12 @@ async def check_login_status() -> dict[str, Any]:
     out = dict(_login_status)
     out["auth_file_exists"] = auth_path.exists()
     out["shop_auth_file_exists"] = shop_path.exists()
+    if out.get("state") == "done" and out.get("kept_store_id"):
+        out["store_note"] = (
+            f"Kept your saved store {out['kept_store_id']}; your Wegmans "
+            f"account's own home store is {out.get('detected_store_id')}. "
+            "Say so if you'd rather switch to the account's store."
+        )
     if out.get("state") == "done":
         if out.get("shop_ok"):
             out["next"] = (
